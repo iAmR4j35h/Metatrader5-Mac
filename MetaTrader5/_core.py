@@ -193,7 +193,7 @@ def _build_text_command(command: str, params: Dict[str, Any]) -> str:
 
 def _call_mt5(command: str, **params) -> Optional[Dict[str, Any]]:
     """Call an MT5 function via the text IPC protocol."""
-    global _last_error
+    global _last_error, _connection
 
     if not _ensure_connection():
         _last_error = RES_E_INTERNAL_FAIL_CONNECT
