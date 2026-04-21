@@ -119,10 +119,11 @@ def _ensure_connection() -> bool:
 
     with _connection_lock:
         if _connection is not None:
-            # Test if connection is still alive
+            # Test if connection is still alive using VERSION command
+            # (Don't use bare PING as that's MT5's identification message)
             try:
                 _connection.settimeout(2)
-                _send_text(_connection, 'PING')
+                _send_text(_connection, 'VERSION')
                 response = _recv_text(_connection, 5)
                 if response:
                     success, _, _ = _parse_text_response(response)
@@ -144,9 +145,9 @@ def _ensure_connection() -> bool:
             sock.settimeout(DEFAULT_TIMEOUT)
             sock.connect((DEFAULT_HOST, DEFAULT_PORT))
 
-            # Test the connection
+            # Test the connection with VERSION command
             sock.settimeout(5)
-            _send_text(sock, 'PING')
+            _send_text(sock, 'VERSION')
             response = _recv_text(sock, 5)
 
             if response:

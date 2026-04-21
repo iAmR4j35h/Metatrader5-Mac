@@ -81,14 +81,22 @@ class MT5BridgeServer:
 
             # MT5 EA connects and immediately sends PING or INIT to identify itself
             # Python scripts send commands like ACCOUNT, VERSION, etc.
-            # Distinguish by checking if MT5 is already connected:
-            # - If MT5 is NOT connected and message is PING/INIT -> this is MT5
-            # - Otherwise -> this is a Python script
+            # Distinguish by checking message patterns:
+            # - MT5 sends exactly "PING" or "INIT" (no params) to identify
+            # - Python sends commands with or without params for actual operations
+            # - Also check if MT5 is already connected to avoid confusion
+
+            parts = data.split('|')
+            command = parts[0] if parts else ""
 
             with self.lock:
                 mt5_not_connected = self.mt5_socket is None
 
-            if mt5_not_connected and (data.startswith('PING') or data.startswith('INIT')):
+            # MT5 identifies itself by sending bare PING or INIT (no parameters)
+            # Python might send PING too but with different context
+            is_mt5_identify = (command == "PING" or command == "INIT") and len(parts) == 1
+
+            if mt5_not_connected and is_mt5_identify:
                 print(f"[+] MetaTrader 5 connected from {addr}")
                 self.handle_mt5_client(client, addr, data)
             else:
