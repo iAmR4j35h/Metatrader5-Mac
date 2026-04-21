@@ -18,20 +18,41 @@ input int    ReconnectDelay = 5;        // Seconds between reconnect attempts
 int          Socket = INVALID_HANDLE;    // INVALID_HANDLE = -1
 string       ReceiveBuffer = "";
 datetime     LastReconnectAttempt = 0;
+int          TimerHandle = INVALID_HANDLE;  // Timer event handle
 
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
 //+------------------------------------------------------------------+
 int OnInit()
 {
+   Print("============================================================");
    Print("MT5 Client Bridge initializing...");
-   Print("Will connect to Python server at ", ServerHost, ":", ServerPort);
+   Print("Target server: ", ServerHost, ":", ServerPort);
+   Print("EA Version: 1.00 (macOS Bridge)");
+   Print("============================================================");
+
+   // Reset connection state
+   Socket = INVALID_HANDLE;
+   ReceiveBuffer = "";
+   LastReconnectAttempt = 0;
 
    // Attempt initial connection
    if(!ConnectToServer())
    {
-      Print("Will retry connection in ", ReconnectDelay, " seconds");
+      Print("[!] Initial connection failed, will retry in ", ReconnectDelay, " seconds");
+      LastReconnectAttempt = TimeCurrent();
    }
+   else
+   {
+      Print("[✓] Bridge EA initialized successfully");
+   }
+
+   // Start timer for more frequent checks (even without ticks)
+   TimerHandle = EventSetTimer(1);  // 1 second timer
+   if(TimerHandle == 0)
+      Print("[!] Failed to set timer");
+   else
+      Print("[✓] Timer started (1 second interval)");
 
    return(INIT_SUCCEEDED);
 }
@@ -41,7 +62,15 @@ int OnInit()
 //+------------------------------------------------------------------+
 void OnDeinit(const int reason)
 {
+   Print("============================================================");
    Print("MT5 Client Bridge shutting down...");
+
+   // Stop timer
+   if(TimerHandle != INVALID_HANDLE)
+   {
+      EventKillTimer();
+      TimerHandle = INVALID_HANDLE;
+   }
 
    if(Socket != INVALID_HANDLE)
    {
@@ -49,7 +78,17 @@ void OnDeinit(const int reason)
       Socket = INVALID_HANDLE;
    }
 
-   Print("MT5 Client Bridge stopped");
+   Print("[✓] Bridge EA stopped");
+   Print("============================================================");
+}
+
+//+------------------------------------------------------------------+
+//| Timer function                                                     |
+//+------------------------------------------------------------------+
+void OnTimer()
+{
+   // Same logic as OnTick - ensure connection is maintained
+   OnTick();
 }
 
 //+------------------------------------------------------------------+
@@ -57,13 +96,33 @@ void OnDeinit(const int reason)
 //+------------------------------------------------------------------+
 void OnTick()
 {
+   static int tickCount = 0;
+   static datetime lastStatusPrint = 0;
+   tickCount++;
+
+   // Print status every 10 seconds when not connected
+   if(Socket == INVALID_HANDLE && TimeCurrent() - lastStatusPrint >= 10)
+   {
+      Print("[STATUS] Not connected. Ticks: ", tickCount,
+            " LastReconnect: ", TimeCurrent() - LastReconnectAttempt, "s ago");
+      lastStatusPrint = TimeCurrent();
+   }
+
    // Check connection
    if(Socket == INVALID_HANDLE)
    {
       // Try to reconnect periodically
       if(TimeCurrent() - LastReconnectAttempt >= ReconnectDelay)
       {
-         ConnectToServer();
+         Print("[RECONNECT] Attempting connection to ", ServerHost, ":", ServerPort, "...");
+         if(ConnectToServer())
+         {
+            Print("[✓] Reconnected successfully!");
+         }
+         else
+         {
+            Print("[✗] Reconnect failed (error: ", GetLastError(), ")");
+         }
          LastReconnectAttempt = TimeCurrent();
       }
       return;
