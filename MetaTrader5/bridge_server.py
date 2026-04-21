@@ -209,10 +209,13 @@ class MT5BridgeServer:
         command = parts[0] if parts else ""
 
         if command == "PING":
+            print(f"    [MT5→Server] PING")
             return "OK|result=pong"
         elif command == "INIT":
+            print(f"    [MT5→Server] INIT")
             return "OK|success=true|path=MT5"
         else:
+            print(f"    [Python→MT5] {message[:50]}...")
             # Forward to MT5 and get response
             return self.forward_to_mt5(message)
 

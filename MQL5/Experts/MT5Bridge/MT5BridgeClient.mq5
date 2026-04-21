@@ -69,16 +69,8 @@ void OnTick()
       return;
    }
 
-   // Check if still connected
-   if(!SocketIsConnected(Socket))
-   {
-      Print("Connection lost, will reconnect...");
-      SocketClose(Socket);
-      Socket = INVALID_HANDLE;
-      return;
-   }
-
-   // Process messages
+   // Process messages - SocketIsReadable will return 0 if no data
+   // Only close connection on actual socket errors, not just no data
    ProcessClientMessages();
 }
 
@@ -115,6 +107,13 @@ bool ConnectToServer()
 
    // Set timeouts (1 second for send/receive)
    SocketTimeouts(Socket, 1000, 1000);
+
+   // Send initial PING to identify ourselves to the server
+   string pingMsg = "PING\n";
+   uchar pingData[];
+   int pingLen = StringToCharArray(pingMsg, pingData, 0, WHOLE_ARRAY, CP_UTF8);
+   if(pingLen > 0)
+      SocketSend(Socket, pingData, pingLen - 1);
 
    Print("Connected to Python server!");
    return true;
