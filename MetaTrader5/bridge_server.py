@@ -116,7 +116,12 @@ class MT5BridgeServer:
             client.close()
 
     def handle_mt5_client(self, client: socket.socket, addr, initial_data: str = ""):
-        """Handle MT5 connection."""
+        """Handle MT5 connection.
+
+        MT5 connects and maintains a persistent connection.
+        The server only sends responses to MT5's initial identification (PING/INIT).
+        After that, MT5 just listens for forwarded commands from Python.
+        """
         with self.lock:
             # Close existing MT5 connection if any
             if self.mt5_socket:
@@ -129,23 +134,25 @@ class MT5BridgeServer:
         print(f"[*] MT5 bridge active - waiting for commands")
 
         try:
-            buffer = initial_data  # Start with data already read
-            while self.running and self.mt5_socket:
-                # Process any complete messages in buffer
-                while '\n' in buffer:
-                    pos = buffer.find('\n')
-                    message = buffer[:pos]
-                    buffer = buffer[pos + 1:]
+            # Only process the initial identification message (PING/INIT)
+            buffer = initial_data
 
-                    if message:
-                        response = self.process_mt5_message(message)
-                        client.send((response + '\n').encode('utf-8'))
+            # Process complete messages in initial data
+            while '\n' in buffer:
+                pos = buffer.find('\n')
+                message = buffer[:pos]
+                buffer = buffer[pos + 1:]
 
-                # Read more data
-                data = client.recv(4096).decode('utf-8')
-                if not data:
-                    break
-                buffer += data
+                if message:
+                    response = self.process_mt5_message(message)
+                    client.send((response + '\n').encode('utf-8'))
+                    print(f"    [Server→MT5] {response[:50]}")
+
+            # Keep connection alive - MT5 doesn't send commands, only receives forwarded ones
+            # forward_to_mt5 will read responses when Python sends commands
+            # Just sleep here until MT5 disconnects or server stops
+            while self.running and self.mt5_socket == client:
+                time.sleep(1)
 
         except Exception as e:
             print(f"\n[!] MT5 connection error: {e}")
