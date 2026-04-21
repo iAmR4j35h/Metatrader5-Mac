@@ -211,8 +211,12 @@ void ProcessClientMessages()
    }
    else if(bytesRead < 0)
    {
-      // Error
-      Print("Socket read error: ", GetLastError());
+      // Error - close socket and trigger reconnect
+      int err = GetLastError();
+      Print("[!] Socket read error: ", err, " - closing connection");
+      SocketClose(Socket);
+      Socket = INVALID_HANDLE;
+      Comment("MT5 Bridge: ERROR\nSocket error: ", err, "\nReconnecting...");
    }
 }
 
