@@ -1,21 +1,21 @@
 //+------------------------------------------------------------------+
 //|                                   MT5BridgeSimple.mq5            |
-//|  Simplified MetaTrader 5 Socket Bridge - No external libs        |
+//|  Simplified MetaTrader 5 Socket Bridge - No external libs      |
 //|                                                                  |
 //|  This version uses MT5's built-in Socket* functions             |
-//|  and simple string parsing instead of JSON library                |
+//|  and simple string parsing instead of JSON library              |
 //+------------------------------------------------------------------+
 #property copyright "MT5 macOS Bridge"
 #property version   "1.00"
 #property strict
 
 // Input parameters
-input int    BridgePort = 8222;        // Bridge port number
-input bool   AllowRemote = false;      // Allow remote connections
+input int    BridgePort = 8222;      // Bridge port number
+input bool   AllowRemote = false;    // Allow remote connections (not recommended)
 
 // Global variables
-int          ServerSocket = INVALID_SOCKET;
-int          ClientSocket = INVALID_SOCKET;
+int          ServerSocket = -1;      // -1 means invalid handle
+int          ClientSocket = -1;      // -1 means invalid handle
 string       ReceiveBuffer = "";
 
 //+------------------------------------------------------------------+
@@ -25,16 +25,9 @@ int OnInit()
 {
    Print("MT5 Simple Bridge initializing...");
 
-   // Initialize socket library
-   if(!SocketInitialize())
-   {
-      Print("Failed to initialize sockets");
-      return(INIT_FAILED);
-   }
-
    // Create server socket
    ServerSocket = SocketCreate();
-   if(ServerSocket == INVALID_SOCKET)
+   if(ServerSocket < 0)
    {
       Print("Failed to create socket: ", GetLastError());
       return(INIT_FAILED);
@@ -46,14 +39,16 @@ int OnInit()
    {
       Print("Failed to bind to port ", BridgePort, ": ", GetLastError());
       SocketClose(ServerSocket);
+      ServerSocket = -1;
       return(INIT_FAILED);
    }
 
    // Start listening
-   if(!SocketListen(ServerSocket, 1))
+   if(!SocketListen(ServerSocket, 5))
    {
       Print("Failed to listen: ", GetLastError());
       SocketClose(ServerSocket);
+      ServerSocket = -1;
       return(INIT_FAILED);
    }
 
@@ -73,19 +68,18 @@ void OnDeinit(const int reason)
 {
    Print("MT5 Simple Bridge shutting down...");
 
-   if(ClientSocket != INVALID_SOCKET)
+   if(ClientSocket >= 0)
    {
       SocketClose(ClientSocket);
-      ClientSocket = INVALID_SOCKET;
+      ClientSocket = -1;
    }
 
-   if(ServerSocket != INVALID_SOCKET)
+   if(ServerSocket >= 0)
    {
       SocketClose(ServerSocket);
-      ServerSocket = INVALID_SOCKET;
+      ServerSocket = -1;
    }
 
-   SocketUninitialize();
    Print("MT5 Simple Bridge stopped");
 }
 
@@ -95,10 +89,10 @@ void OnDeinit(const int reason)
 void OnTick()
 {
    // Accept new connections
-   if(ClientSocket == INVALID_SOCKET)
+   if(ClientSocket < 0)
    {
       ClientSocket = SocketAccept(ServerSocket, 0);
-      if(ClientSocket != INVALID_SOCKET)
+      if(ClientSocket >= 0)
       {
          Print("Python client connected");
          SocketIsBlocking(ClientSocket, false);
@@ -107,7 +101,7 @@ void OnTick()
    }
 
    // Process client messages
-   if(ClientSocket != INVALID_SOCKET)
+   if(ClientSocket >= 0)
    {
       ProcessClientMessages();
    }
@@ -130,16 +124,20 @@ void ProcessClientMessages()
 
       ReceiveBuffer += data;
 
-      // Process complete messages (format: LEN:json\n)
+      // Process complete messages
       ProcessCompleteMessages();
    }
-   else if(received == 0 && SocketIsConnected(ClientSocket) == false)
+   else if(received == 0)
    {
-      // Connection closed
-      Print("Python client disconnected");
-      SocketClose(ClientSocket);
-      ClientSocket = INVALID_SOCKET;
-      ReceiveBuffer = "";
+      // Check if connection is still alive
+      if(!SocketIsConnected(ClientSocket))
+      {
+         // Connection closed
+         Print("Python client disconnected");
+         SocketClose(ClientSocket);
+         ClientSocket = -1;
+         ReceiveBuffer = "";
+      }
    }
 }
 
@@ -163,11 +161,11 @@ void ProcessCompleteMessages()
 }
 
 //+------------------------------------------------------------------+
-//| Simple JSON-like parser and command handler                      |
+//| Simple command handler                                           |
 //+------------------------------------------------------------------+
 void HandleCommand(string cmd)
 {
-   // Expected format: CMD|PARAM1=VAL1|PARAM2=VAL2|...
+   // Expected format: CMD|PARAM1=VAL1|PARAM2=VAL2
    string parts[];
    int count = StringSplit(cmd, '|', parts);
 
@@ -212,19 +210,19 @@ void HandleCommand(string cmd)
 //+------------------------------------------------------------------+
 void SendResponse(string response)
 {
-   if(ClientSocket == INVALID_SOCKET)
+   if(ClientSocket < 0)
       return;
 
    response += "\n";
    uchar data[];
-   StringToCharArray(response, data, 0, StringLen(response), CP_UTF8);
-   SocketWrite(ClientSocket, data, StringLen(response));
+   StringToCharArray(response, data, 0, WHOLE_ARRAY, CP_UTF8);
+   SocketWrite(ClientSocket, data, ArraySize(data));
 }
 
 //+------------------------------------------------------------------+
 //| Parse parameter value                                            |
 //+------------------------------------------------------------------+
-string GetParam(string parts[], int count, string key, string defaultVal = "")
+string GetParam(string &parts[], int count, string key, string defaultVal = "")
 {
    string prefix = key + "=";
    for(int i = 1; i < count; i++)
@@ -236,21 +234,16 @@ string GetParam(string parts[], int count, string key, string defaultVal = "")
 }
 
 //+------------------------------------------------------------------+
-//| Command Handlers                                                  |
+//| Command Handlers                                                 |
 //+------------------------------------------------------------------+
 
-void HandleInit(string parts[], int count)
+void HandleInit(string &parts[], int count)
 {
    string login = GetParam(parts, count, "login", "0");
    string server = GetParam(parts, count, "server", "");
 
-   // Check terminal status
-   if(!TerminalInfoInteger(TERMINAL_CONNECTED))
-   {
-      SendResponse("ERR|code=31|message=Not connected to broker");
-      return;
-   }
-
+   // MT5 must already be running with an account
+   // This command mainly establishes the connection
    SendResponse("OK|success=true|path=" + TerminalInfoString(TERMINAL_PATH));
 }
 
@@ -266,7 +259,7 @@ void HandleSymbolTotal()
    SendResponse("OK|total=" + IntegerToString(total));
 }
 
-void HandleSymbolGet(string parts[], int count)
+void HandleSymbolGet(string &parts[], int count)
 {
    string group = GetParam(parts, count, "group", "");
    string result = "OK|symbols=";
@@ -289,7 +282,7 @@ void HandleSymbolGet(string parts[], int count)
    SendResponse(result);
 }
 
-void HandleTick(string parts[], int count)
+void HandleTick(string &parts[], int count)
 {
    string symbol = GetParam(parts, count, "symbol", "");
 
@@ -319,7 +312,7 @@ void HandleOrdersTotal()
    SendResponse("OK|total=" + IntegerToString(total));
 }
 
-void HandleOrdersGet(string parts[], int count)
+void HandleOrdersGet(string &parts[], int count)
 {
    string symbol = GetParam(parts, count, "symbol", "");
    string result = "OK|orders=";
@@ -355,7 +348,7 @@ void HandlePositionsTotal()
    SendResponse("OK|total=" + IntegerToString(total));
 }
 
-void HandlePositionsGet(string parts[], int count)
+void HandlePositionsGet(string &parts[], int count)
 {
    string symbol = GetParam(parts, count, "symbol", "");
    string result = "OK|positions=";
@@ -387,7 +380,7 @@ void HandlePositionsGet(string parts[], int count)
 
 void HandleAccount()
 {
-   if(!AccountInfoInteger(ACCOUNT_LOGIN))
+   if(AccountInfoInteger(ACCOUNT_LOGIN) == 0)
    {
       SendResponse("ERR|code=6|message=Not logged in");
       return;
@@ -402,7 +395,7 @@ void HandleAccount()
                 "|margin_free=" + DoubleToString(AccountInfoDouble(ACCOUNT_MARGIN_FREE), 2));
 }
 
-void HandleTrade(string parts[], int count)
+void HandleTrade(string &parts[], int count)
 {
    string action = GetParam(parts, count, "action", "1");
    string symbol = GetParam(parts, count, "symbol", "");
