@@ -74,10 +74,13 @@ class MT5BridgeServer:
         """Handle a new client connection."""
         try:
             # First message determines client type
-            data = client.recv(1024).decode('utf-8').strip()
+            # Read without strip to preserve newlines for protocol detection
+            data = client.recv(1024).decode('utf-8')
             print(f"    First message: {repr(data)}")
 
-            if not data:
+            # Remove just trailing whitespace, keep content for processing
+            data_stripped = data.strip()
+            if not data_stripped:
                 print(f"    [!] Empty first message from {addr}, closing")
                 client.close()
                 return
@@ -89,7 +92,7 @@ class MT5BridgeServer:
             # - Python sends commands with or without params for actual operations
             # - Also check if MT5 is already connected to avoid confusion
 
-            parts = data.split('|')
+            parts = data_stripped.split('|')
             command = parts[0] if parts else ""
 
             with self.lock:
@@ -103,7 +106,7 @@ class MT5BridgeServer:
 
             if mt5_not_connected and is_mt5_identify:
                 print(f"[+] MetaTrader 5 connected from {addr}")
-                self.handle_mt5_client(client, addr, data)
+                self.handle_mt5_client(client, addr, data_stripped)
             else:
                 print(f"[+] Python client connected from {addr}")
                 self.handle_script_client(client, addr, data)
