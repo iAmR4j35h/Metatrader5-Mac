@@ -170,7 +170,6 @@ def display_terminal_info():
     # Get terminal info
     terminal = mt5.terminal_info()
     if terminal:
-        print(f"  Terminal Name: {terminal.name}")
         print(f"  Data Path: {terminal.data_path}")
         print(f"  Connected: {'Yes' if terminal.connected else 'No'}")
         print(f"  Trading Allowed: {'Yes' if terminal.trade_allowed else 'No'}")
