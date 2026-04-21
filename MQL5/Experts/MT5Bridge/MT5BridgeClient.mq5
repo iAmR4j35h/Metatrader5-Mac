@@ -227,12 +227,16 @@ void HandleCommand(string cmd)
       HandleInit(parts, count);
    else if(command == "VERSION")
       HandleVersion();
-   else if(command == "SYMBOL_TOTAL")
+   else if(command == "SYMBOL_TOTAL" || command == "SYMBOLS_TOTAL")
       HandleSymbolTotal();
-   else if(command == "SYMBOL_GET")
+   else if(command == "SYMBOL_GET" || command == "SYMBOLS_GET")
       HandleSymbolGet(parts, count);
-   else if(command == "TICK")
+   else if(command == "SYMBOL_INFO")
+      HandleSymbolInfo(parts, count);
+   else if(command == "TICK" || command == "SYMBOL_TICK" || command == "SYMBOL_INFO_TICK")
       HandleTick(parts, count);
+   else if(command == "SYMBOL_SELECT")
+      HandleSymbolSelect(parts, count);
    else if(command == "ORDERS_TOTAL")
       HandleOrdersTotal();
    else if(command == "ORDERS_GET")
@@ -241,10 +245,20 @@ void HandleCommand(string cmd)
       HandlePositionsTotal();
    else if(command == "POSITIONS_GET")
       HandlePositionsGet(parts, count);
-   else if(command == "ACCOUNT")
+   else if(command == "ACCOUNT" || command == "ACCOUNT_INFO")
       HandleAccount();
-   else if(command == "TRADE")
+   else if(command == "TERMINAL_INFO")
+      HandleTerminalInfo();
+   else if(command == "TRADE" || command == "ORDER_SEND" || command == "ORDER_CHECK")
       HandleTrade(parts, count);
+   else if(command == "MARKET_BOOK_ADD")
+      HandleMarketBookAdd(parts, count);
+   else if(command == "MARKET_BOOK_GET")
+      HandleMarketBookGet(parts, count);
+   else if(command == "MARKET_BOOK_RELEASE")
+      HandleMarketBookRelease(parts, count);
+   else if(command == "SHUTDOWN")
+      SendResponse("OK|result=disconnecting");
    else
       SendResponse("ERR|code=7|message=Unknown command: " + command);
 }
@@ -473,4 +487,130 @@ void HandleTrade(string &parts[], int count)
                 "|deal=" + IntegerToString((int)tradeResult.deal) +
                 "|volume=" + DoubleToString(tradeResult.volume, 2) +
                 "|price=" + DoubleToString(tradeResult.price, 5));
+}
+
+void HandleSymbolInfo(string &parts[], int count)
+{
+   string symbol = GetParam(parts, count, "symbol", "");
+
+   if(StringLen(symbol) == 0)
+   {
+      SendResponse("ERR|code=2|message=Symbol required");
+      return;
+   }
+
+   if(!SymbolSelect(symbol, true))
+   {
+      SendResponse("ERR|code=4|message=Symbol not found");
+      return;
+   }
+
+   MqlTick tick;
+   SymbolInfoTick(symbol, tick);
+
+   SendResponse("OK|name=" + symbol +
+                "|bid=" + DoubleToString(tick.bid, 5) +
+                "|ask=" + DoubleToString(tick.ask, 5) +
+                "|last=" + DoubleToString(tick.last, 5) +
+                "|volume=" + IntegerToString((int)tick.volume) +
+                "|digits=" + IntegerToString((int)SymbolInfoInteger(symbol, SYMBOL_DIGITS)) +
+                "|spread=" + IntegerToString((int)SymbolInfoInteger(symbol, SYMBOL_SPREAD)) +
+                "|point=" + DoubleToString(SymbolInfoDouble(symbol, SYMBOL_POINT), 10) +
+                "|currency_base=" + SymbolInfoString(symbol, SYMBOL_CURRENCY_BASE) +
+                "|currency_profit=" + SymbolInfoString(symbol, SYMBOL_CURRENCY_PROFIT) +
+                "|description=" + SymbolInfoString(symbol, SYMBOL_DESCRIPTION));
+}
+
+void HandleSymbolSelect(string &parts[], int count)
+{
+   string symbol = GetParam(parts, count, "symbol", "");
+   string enableStr = GetParam(parts, count, "enable", "true");
+
+   if(StringLen(symbol) == 0)
+   {
+      SendResponse("ERR|code=2|message=Symbol required");
+      return;
+   }
+
+   bool enable = (enableStr == "true" || enableStr == "1");
+   bool result = SymbolSelect(symbol, enable);
+
+   if(result)
+      SendResponse("OK|result=true");
+   else
+      SendResponse("ERR|code=4|message=Failed to select symbol");
+}
+
+void HandleTerminalInfo()
+{
+   SendResponse("OK|connected=" + IntegerToString((int)TerminalInfoInteger(TERMINAL_CONNECTED)) +
+                "|dlls_allowed=" + IntegerToString((int)TerminalInfoInteger(TERMINAL_DLLS_ALLOWED)) +
+                "|trade_allowed=" + IntegerToString((int)TerminalInfoInteger(TERMINAL_TRADE_ALLOWED)) +
+                "|path=" + TerminalInfoString(TERMINAL_PATH) +
+                "|data_path=" + TerminalInfoString(TERMINAL_DATA_PATH) +
+                "|common_data_path=" + TerminalInfoString(TERMINAL_COMMONDATA_PATH));
+}
+
+void HandleMarketBookAdd(string &parts[], int count)
+{
+   string symbol = GetParam(parts, count, "symbol", "");
+
+   if(StringLen(symbol) == 0)
+   {
+      SendResponse("ERR|code=2|message=Symbol required");
+      return;
+   }
+
+   if(MarketBookAdd(symbol))
+      SendResponse("OK|result=true");
+   else
+      SendResponse("ERR|code=1|message=Failed to subscribe to market depth");
+}
+
+void HandleMarketBookGet(string &parts[], int count)
+{
+   string symbol = GetParam(parts, count, "symbol", "");
+
+   if(StringLen(symbol) == 0)
+   {
+      SendResponse("ERR|code=2|message=Symbol required");
+      return;
+   }
+
+   MqlBookInfo book[];
+   int depth = MarketBookGet(symbol, book);
+
+   if(depth == 0)
+   {
+      SendResponse("OK|data=[]");
+      return;
+   }
+
+   string result = "OK|data=[";
+   for(int i = 0; i < depth; i++)
+   {
+      if(i > 0) result += ",";
+      result += "{\"type\":" + IntegerToString((int)book[i].type) +
+                ",\"price\":" + DoubleToString(book[i].price, 5) +
+                ",\"volume\":" + IntegerToString((int)book[i].volume) + "}";
+   }
+   result += "]";
+
+   SendResponse(result);
+}
+
+void HandleMarketBookRelease(string &parts[], int count)
+{
+   string symbol = GetParam(parts, count, "symbol", "");
+
+   if(StringLen(symbol) == 0)
+   {
+      SendResponse("ERR|code=2|message=Symbol required");
+      return;
+   }
+
+   if(MarketBookRelease(symbol))
+      SendResponse("OK|result=true");
+   else
+      SendResponse("ERR|code=1|message=Failed to unsubscribe from market depth");
 }
