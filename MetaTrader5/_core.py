@@ -342,7 +342,8 @@ def initialize(path: Optional[str] = None,
         DEFAULT_TIMEOUT = timeout
 
     # Build INIT command with optional login params
-    params = {}
+    # Always include a source param to distinguish from MT5's bare INIT
+    params = {'source': 'python'}
     if login is not None:
         params['login'] = login
     if password is not None:

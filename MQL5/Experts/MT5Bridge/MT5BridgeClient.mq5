@@ -264,7 +264,19 @@ void HandleCommand(string cmd)
 
 void HandleInit(string &parts[], int count)
 {
-   SendResponse("OK|success=true|path=" + TerminalInfoString(TERMINAL_PATH));
+   // Check if this is from Python (has source=python param) or MT5 identification (bare INIT)
+   string source = GetParam(parts, count, "source", "");
+
+   if(source == "python")
+   {
+      // Python client calling initialize() - return success
+      SendResponse("OK|success=true|path=" + TerminalInfoString(TERMINAL_PATH));
+   }
+   else
+   {
+      // Bare INIT - MT5 identification or compatibility
+      SendResponse("OK|success=true|path=" + TerminalInfoString(TERMINAL_PATH));
+   }
 }
 
 void HandleVersion()
