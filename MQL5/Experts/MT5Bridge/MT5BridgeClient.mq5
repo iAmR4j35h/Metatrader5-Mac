@@ -105,6 +105,8 @@ void OnTick()
    {
       Print("[STATUS] Not connected. Ticks: ", tickCount,
             " LastReconnect: ", TimeCurrent() - LastReconnectAttempt, "s ago");
+      // Also show visual indicator on chart
+      Comment("MT5 Bridge: DISCONNECTED\nCheck Experts tab for details\nRetrying every ", ReconnectDelay, " seconds");
       lastStatusPrint = TimeCurrent();
    }
 
@@ -118,15 +120,20 @@ void OnTick()
          if(ConnectToServer())
          {
             Print("[✓] Reconnected successfully!");
+            Comment("MT5 Bridge: CONNECTED\nPython server: ", ServerHost, ":", ServerPort);
          }
          else
          {
             Print("[✗] Reconnect failed (error: ", GetLastError(), ")");
+            Comment("MT5 Bridge: FAILED\nError: ", GetLastError(), "\nCheck server is running");
          }
          LastReconnectAttempt = TimeCurrent();
       }
       return;
    }
+
+   // Update visual indicator
+   Comment("MT5 Bridge: CONNECTED\nPython server: ", ServerHost, ":", ServerPort);
 
    // Process messages - SocketIsReadable will return 0 if no data
    // Only close connection on actual socket errors, not just no data
