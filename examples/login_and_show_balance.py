@@ -28,6 +28,20 @@ import argparse
 from datetime import datetime
 
 
+# ============================================================
+# CONFIGURATION - Edit these values with your account details
+# ============================================================
+DEFAULT_LOGIN = None          # Your MT5 account login (e.g., 245507058)
+DEFAULT_PASSWORD = None       # Your MT5 account password (optional)
+DEFAULT_SERVER = None         # Your broker server (e.g., "Exness-MT5Real24")
+
+# Example:
+# DEFAULT_LOGIN = 245507058
+# DEFAULT_PASSWORD = "your_password_here"  # Not recommended for security
+# DEFAULT_SERVER = "Exness-MT5Real24"
+# ============================================================
+
+
 def parse_arguments():
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(
@@ -35,28 +49,34 @@ def parse_arguments():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  %(prog)s                           # Connect to existing session
+  %(prog)s                           # Use defaults from file or existing session
   %(prog)s --login 123456            # Specify login number
   %(prog)s --server "Broker-Demo"    # Specify server
   %(prog)s --password "password"     # Specify password (not recommended)
+
+Configuration:
+  Edit DEFAULT_LOGIN, DEFAULT_PASSWORD, DEFAULT_SERVER in this file.
         """
     )
 
     parser.add_argument(
         '--login', '-l',
         type=int,
+        default=DEFAULT_LOGIN,
         help='Account login number (e.g., 123456)'
     )
 
     parser.add_argument(
         '--password', '-p',
         type=str,
+        default=DEFAULT_PASSWORD,
         help='Account password (optional, not recommended to use via command line)'
     )
 
     parser.add_argument(
         '--server', '-s',
         type=str,
+        default=DEFAULT_SERVER,
         help='Trading server name (e.g., "Broker-Demo", "Broker-Real")'
     )
 
