@@ -43,8 +43,8 @@ def main():
 
     terminal = mt5.terminal_info()
     if terminal:
-        print(f"   Name: {terminal.name}")
         print(f"   Connected: {terminal.connected}")
+        print(f"   Path: {terminal.path}")
 
     # Get account info
     print("\n3. Account Information:")
