@@ -197,6 +197,16 @@ class MT5BridgeServer:
                 pass
             print(f"\n[-] Python script disconnected")
 
+    def __init__(self, host=HOST, port=PORT):
+        self.host = host
+        self.port = port
+        self.server_socket = None
+        self.mt5_socket = None  # Connection from MT5 EA
+        self.script_sockets = []  # Connections from Python scripts
+        self.running = False
+        self.lock = threading.Lock()
+        self._mt5_response_buffer = ""  # Buffer for MT5 responses
+
     def forward_to_mt5(self, message: str) -> str:
         """Forward a message to MT5 and return the response."""
         with self.lock:
@@ -210,8 +220,21 @@ class MT5BridgeServer:
                 self.mt5_socket.send((message + '\n').encode('utf-8'))
 
                 # Wait for response (with timeout)
+                # MT5 might send multiple responses if commands were queued
                 self.mt5_socket.settimeout(30)
-                response = self.mt5_socket.recv(4096).decode('utf-8').strip()
+
+                # Read data until we have at least one complete response
+                while '\n' not in self._mt5_response_buffer:
+                    data = self.mt5_socket.recv(4096).decode('utf-8')
+                    if not data:
+                        return "ERR|code=-10002|message=MT5 disconnected"
+                    self._mt5_response_buffer += data
+
+                # Extract first complete response
+                pos = self._mt5_response_buffer.find('\n')
+                response = self._mt5_response_buffer[:pos].strip()
+                self._mt5_response_buffer = self._mt5_response_buffer[pos + 1:]
+
                 self.mt5_socket.settimeout(None)
 
                 print(f"    [←MT5] {response[:50]}")
