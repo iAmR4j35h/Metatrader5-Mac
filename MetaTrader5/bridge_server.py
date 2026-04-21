@@ -193,10 +193,12 @@ class MT5BridgeServer:
         """Forward a message to MT5 and return the response."""
         with self.lock:
             if not self.mt5_socket:
+                print(f"    [!] Cannot forward '{message[:20]}...' - MT5 not connected")
                 return "ERR|code=-10004|message=MT5 not connected"
 
             try:
                 # Send to MT5
+                print(f"    [→MT5] {message[:50]}")
                 self.mt5_socket.send((message + '\n').encode('utf-8'))
 
                 # Wait for response (with timeout)
@@ -204,11 +206,14 @@ class MT5BridgeServer:
                 response = self.mt5_socket.recv(4096).decode('utf-8').strip()
                 self.mt5_socket.settimeout(None)
 
+                print(f"    [←MT5] {response[:50]}")
                 return response
 
             except socket.timeout:
+                print(f"    [!] MT5 timeout waiting for response")
                 return "ERR|code=-10005|message=MT5 timeout"
             except Exception as e:
+                print(f"    [!] Error forwarding to MT5: {e}")
                 return f"ERR|code=-10000|message={str(e)}"
 
     def process_mt5_message(self, message: str) -> str:
