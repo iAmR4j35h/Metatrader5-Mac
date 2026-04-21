@@ -9,8 +9,8 @@ description = "MetaTrader5 API for macOS via socket bridge"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
-    {name = "MetaQuotes Ltd."},
-    {name = "macOS Port Contributor"}
+    {name = "Rajesh", email = "iamr4j35h@gmail.com"},
+    {name = "MetaTrader5 macOS Port"}
 ]
 keywords = ["metatrader", "mt5", "forex", "trading", "macos"]
 classifiers = [
@@ -43,10 +43,10 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourusername/metatrader5-macos"
+Homepage = "https://github.com/iAmR4j35h/Metatrader5-Mac"
 Documentation = "https://www.mql5.com/en/docs/integration/python_metatrader5"
-Repository = "https://github.com/yourusername/metatrader5-macos"
-Issues = "https://github.com/yourusername/metatrader5-macos/issues"
+Repository = "https://github.com/iAmR4j35h/Metatrader5-Mac"
+Issues = "https://github.com/iAmR4j35h/Metatrader5-Mac/issues"
 
 [tool.setuptools.packages.find]
 where = ["."]

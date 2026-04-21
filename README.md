@@ -4,10 +4,37 @@ A reverse-engineered macOS-compatible implementation of the MetaTrader5 Python A
 
 [![Python Version](https://img.shields.io/badge/python-3.7%2B-blue)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/iAmR4j35h/Metatrader5-Mac)](https://github.com/iAmR4j35h/Metatrader5-Mac/stargazers)
+[![GitHub issues](https://img.shields.io/github/issues/iAmR4j35h/Metatrader5-Mac)](https://github.com/iAmR4j35h/Metatrader5-Mac/issues)
+
+> 🚀 **Trade on MetaTrader 5 from your Mac!** This package enables Python control of MT5 on macOS via a socket bridge.
+
+## 📚 Table of Contents
+
+- [Overview](#overview)
+- [Architecture](#architecture)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Quick Start](#quick-start-for-btc-trading)
+- [Examples](#examples)
+- [API Reference](#api-reference)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
+- [License](#license)
 
 ## Overview
 
-The official `metatrader5` Python package only works on Windows because it uses Windows Named Pipes for IPC communication with the MT5 terminal. This package provides a macOS-compatible implementation that uses TCP sockets instead, allowing you to control MetaTrader 5 from macOS.
+The official `metatrader5` Python package only works on **Windows** because it uses Windows Named Pipes for IPC communication with the MT5 terminal. This package provides a **macOS-compatible** implementation that uses TCP sockets instead, allowing you to control MetaTrader 5 from macOS natively.
+
+### Why This Package?
+
+| Feature | Windows Official | macOS (This Package) |
+|---------|------------------|---------------------|
+| Native Python API | ✅ | ✅ |
+| Real-time data | ✅ | ✅ |
+| Trading operations | ✅ | ✅ |
+| Historical data | ✅ | ✅ |
+| Works on macOS | ❌ | ✅ |
 
 ## Architecture
 
@@ -48,8 +75,8 @@ The official `metatrader5` Python package only works on Windows because it uses 
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/metatrader5-macos.git
-cd metatrader5-macos
+git clone https://github.com/iAmR4j35h/Metatrader5-Mac.git
+cd Metatrader5-Mac
 
 # Install the package
 pip install -e .
@@ -605,7 +632,15 @@ export MT5_TIMEOUT=60
 
 ## Support
 
-For issues and feature requests, please use the GitHub issue tracker.
+For issues and feature requests, please use the [GitHub issue tracker](https://github.com/iAmR4j35h/Metatrader5-Mac/issues).
 
 For MT5-specific questions, refer to the official MQL5 documentation:
 https://www.mql5.com/en/docs/integration/python_metatrader5
+
+## Contributors
+
+- [@iAmR4j35h](https://github.com/iAmR4j35h) - Creator and maintainer
+
+## Star History
+
+If you find this project useful, please consider giving it a ⭐ on GitHub!

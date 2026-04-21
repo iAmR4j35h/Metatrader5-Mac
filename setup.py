@@ -21,7 +21,7 @@ setup(
     description="MetaTrader5 API for macOS via socket bridge",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/yourusername/metatrader5-macos",
+    url="https://github.com/iAmR4j35h/Metatrader5-Mac",
     packages=find_packages(),
     classifiers=[
         "Development Status :: 4 - Beta",
@@ -61,8 +61,8 @@ setup(
         ],
     },
     project_urls={
-        "Bug Reports": "https://github.com/yourusername/metatrader5-macos/issues",
-        "Source": "https://github.com/yourusername/metatrader5-macos",
+        "Bug Reports": "https://github.com/iAmR4j35h/Metatrader5-Mac/issues",
+        "Source": "https://github.com/iAmR4j35h/Metatrader5-Mac",
         "Documentation": "https://www.mql5.com/en/docs/integration/python_metatrader5",
     },
 )
