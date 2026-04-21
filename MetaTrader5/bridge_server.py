@@ -56,6 +56,7 @@ class MT5BridgeServer:
             try:
                 client, addr = self.server_socket.accept()
                 print(f"\n[+] New connection from {addr}")
+                print(f"    MT5 connected status: {self.mt5_socket is not None}")
 
                 # Determine if this is MT5 or a Python script
                 handler = threading.Thread(
@@ -74,8 +75,10 @@ class MT5BridgeServer:
         try:
             # First message determines client type
             data = client.recv(1024).decode('utf-8').strip()
+            print(f"    First message: {repr(data)}")
 
             if not data:
+                print(f"    [!] Empty first message from {addr}, closing")
                 client.close()
                 return
 
@@ -95,6 +98,8 @@ class MT5BridgeServer:
             # MT5 identifies itself by sending bare PING or INIT (no parameters)
             # Python might send PING too but with different context
             is_mt5_identify = (command == "PING" or command == "INIT") and len(parts) == 1
+
+            print(f"    Command: {command}, parts: {len(parts)}, is_mt5_identify: {is_mt5_identify}, mt5_not_connected: {mt5_not_connected}")
 
             if mt5_not_connected and is_mt5_identify:
                 print(f"[+] MetaTrader 5 connected from {addr}")
