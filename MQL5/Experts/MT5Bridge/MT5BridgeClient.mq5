@@ -2,8 +2,8 @@
 //|                                      MT5BridgeClient.mq5       |
 //|  MetaTrader 5 Client Bridge for macOS Python API               |
 //|                                                                  |
-//|  This EA connects TO a Python server (instead of listening)     |
-//|  Requires Python server to be running first                       |
+//|  This EA connects TO a Python server (instead of listening)   |
+//|  Requires Python server to be running first                     |
 //+------------------------------------------------------------------+
 #property copyright "MT5 macOS Bridge"
 #property version   "1.00"
@@ -15,7 +15,7 @@ input int    ServerPort = 8222;         // Python server port
 input int    ReconnectDelay = 5;        // Seconds between reconnect attempts
 
 // Global variables
-int          Socket = INVALID_SOCKET;
+int          Socket = INVALID_HANDLE;    // INVALID_HANDLE = -1
 string       ReceiveBuffer = "";
 datetime     LastReconnectAttempt = 0;
 
@@ -37,16 +37,16 @@ int OnInit()
 }
 
 //+------------------------------------------------------------------+
-//| Expert deinitialization function                                   |
+//| Expert deinitialization function                                 |
 //+------------------------------------------------------------------+
 void OnDeinit(const int reason)
 {
    Print("MT5 Client Bridge shutting down...");
 
-   if(Socket != INVALID_SOCKET)
+   if(Socket != INVALID_HANDLE)
    {
       SocketClose(Socket);
-      Socket = INVALID_SOCKET;
+      Socket = INVALID_HANDLE;
    }
 
    Print("MT5 Client Bridge stopped");
@@ -58,7 +58,7 @@ void OnDeinit(const int reason)
 void OnTick()
 {
    // Check connection
-   if(Socket == INVALID_SOCKET)
+   if(Socket == INVALID_HANDLE)
    {
       // Try to reconnect periodically
       if(TimeCurrent() - LastReconnectAttempt >= ReconnectDelay)
@@ -74,7 +74,7 @@ void OnTick()
    {
       Print("Connection lost, will reconnect...");
       SocketClose(Socket);
-      Socket = INVALID_SOCKET;
+      Socket = INVALID_HANDLE;
       return;
    }
 
@@ -87,34 +87,36 @@ void OnTick()
 //+------------------------------------------------------------------+
 bool ConnectToServer()
 {
-   if(Socket != INVALID_SOCKET)
+   if(Socket != INVALID_HANDLE)
    {
       SocketClose(Socket);
-      Socket = INVALID_SOCKET;
+      Socket = INVALID_HANDLE;
    }
 
-   // Create socket
+   // Create socket with default flags
    Socket = SocketCreate();
-   if(Socket == INVALID_SOCKET)
+   if(Socket == INVALID_HANDLE)
    {
-      Print("Failed to create socket");
+      Print("Failed to create socket, error: ", GetLastError());
       return false;
    }
 
-   // Connect to Python server
+   Print("Connecting to ", ServerHost, ":", ServerPort, "...");
+
+   // Connect to Python server with 5 second timeout
    if(!SocketConnect(Socket, ServerHost, ServerPort, 5000))
    {
-      Print("Failed to connect to ", ServerHost, ":", ServerPort);
-      Print("Make sure Python server is running: python -m MetaTrader5.server");
+      Print("Failed to connect to ", ServerHost, ":", ServerPort, ", error: ", GetLastError());
+      Print("Make sure Python server is running!");
       SocketClose(Socket);
-      Socket = INVALID_SOCKET;
+      Socket = INVALID_HANDLE;
       return false;
    }
 
-   // Set non-blocking mode
-   SocketIsBlocking(Socket, false);
+   // Set timeouts (1 second for send/receive)
+   SocketTimeouts(Socket, 1000, 1000);
 
-   Print("✓ Connected to Python server at ", ServerHost, ":", ServerPort);
+   Print("Connected to Python server!");
    return true;
 }
 
@@ -123,24 +125,29 @@ bool ConnectToServer()
 //+------------------------------------------------------------------+
 void ProcessClientMessages()
 {
-   uchar buffer[4096];
-   int received = SocketReceive(Socket, buffer, 4096, 10);
+   // Check how many bytes are available to read
+   uint available = SocketIsReadable(Socket);
 
-   if(received > 0)
+   if(available == 0)
+      return;  // No data available
+
+   // Read available data
+   uchar buffer[];
+   int bytesRead = SocketRead(Socket, buffer, available, 1000);
+
+   if(bytesRead > 0)
    {
       // Convert bytes to string
-      string data = CharArrayToString(buffer, 0, received, CP_UTF8);
+      string data = CharArrayToString(buffer, 0, bytesRead, CP_UTF8);
       ReceiveBuffer += data;
 
       // Process complete messages
       ProcessCompleteMessages();
    }
-   else if(received < 0)
+   else if(bytesRead < 0)
    {
-      // Connection error
-      Print("Receive error, disconnecting");
-      SocketClose(Socket);
-      Socket = INVALID_SOCKET;
+      // Error
+      Print("Socket read error: ", GetLastError());
    }
 }
 
@@ -168,13 +175,18 @@ void ProcessCompleteMessages()
 //+------------------------------------------------------------------+
 void SendResponse(string response)
 {
-   if(Socket == INVALID_SOCKET)
+   if(Socket == INVALID_HANDLE)
       return;
 
    response += "\n";
+
+   // Convert string to uchar array
    uchar data[];
-   StringToCharArray(response, data, 0, WHOLE_ARRAY, CP_UTF8);
-   SocketSend(Socket, data, ArraySize(data));
+   int len = StringToCharArray(response, data, 0, WHOLE_ARRAY, CP_UTF8);
+
+   // Send data (excluding null terminator)
+   if(len > 0)
+      SocketSend(Socket, data, len - 1);
 }
 
 //+------------------------------------------------------------------+
