@@ -5,7 +5,7 @@
 [![GitHub stars](https://img.shields.io/github/stars/iAmR4j35h/Metatrader5-Mac)](https://github.com/iAmR4j35h/Metatrader5-Mac/stargazers)
 [![GitHub issues](https://img.shields.io/github/issues/iAmR4j35h/Metatrader5-Mac)](https://github.com/iAmR4j35h/Metatrader5-Mac/issues)
 
-> ☕ **[Support this project](#support--donate)** – Help keep this macOS port maintained!
+> ☕ **[Support this project](#support-and-donate)** – Help keep this macOS port maintained!
 
 > 🚀 **Trade on MetaTrader 5 from your Mac!** A reverse-engineered, macOS-compatible Python API for MetaTrader 5.
 
@@ -340,7 +340,7 @@ MIT License - See [LICENSE](LICENSE) for details.
 
 Unofficial implementation. MetaQuotes Software Corp. is not affiliated with this project. Trading forex/CFDs carries high risk of losing money.
 
-## Support & Donate ☕
+## Support and Donate ☕
 
 If this project helped you trade on macOS, consider supporting its development:
 
