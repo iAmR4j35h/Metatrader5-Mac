@@ -1,158 +1,63 @@
-# MetaTrader5 for macOS
-
-A reverse-engineered macOS-compatible implementation of the MetaTrader5 Python API.
+# MetaTrader5 for macOS 🍎
 
 [![Python Version](https://img.shields.io/badge/python-3.7%2B-blue)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/iAmR4j35h/Metatrader5-Mac)](https://github.com/iAmR4j35h/Metatrader5-Mac/stargazers)
 [![GitHub issues](https://img.shields.io/github/issues/iAmR4j35h/Metatrader5-Mac)](https://github.com/iAmR4j35h/Metatrader5-Mac/issues)
 
-> 🚀 **Trade on MetaTrader 5 from your Mac!** This package enables Python control of MT5 on macOS via a socket bridge.
+> 🚀 **Trade on MetaTrader 5 from your Mac!** A reverse-engineered, macOS-compatible Python API for MetaTrader 5.
 
-## 📚 Table of Contents
+## Why This Package?
 
-- [Overview](#overview)
-- [Architecture](#architecture)
-- [Prerequisites](#prerequisites)
-- [Installation](#installation)
-- [Quick Start](#quick-start-for-btc-trading)
-- [Examples](#examples)
-- [API Reference](#api-reference)
-- [Troubleshooting](#troubleshooting)
-- [Contributing](#contributing)
-- [License](#license)
-
-## Overview
-
-The official `metatrader5` Python package only works on **Windows** because it uses Windows Named Pipes for IPC communication with the MT5 terminal. This package provides a **macOS-compatible** implementation that uses TCP sockets instead, allowing you to control MetaTrader 5 from macOS natively.
-
-### Why This Package?
+The official `metatrader5` Python package only works on **Windows** (uses Windows Named Pipes). This package provides a **macOS-compatible** implementation using TCP sockets, enabling full MT5 control from macOS.
 
 | Feature | Windows Official | macOS (This Package) |
 |---------|------------------|---------------------|
 | Native Python API | ✅ | ✅ |
-| Real-time data | ✅ | ✅ |
+| Real-time price streaming | ✅ | ✅ |
 | Trading operations | ✅ | ✅ |
 | Historical data | ✅ | ✅ |
+| Live tick streaming | ✅ | ✅ |
 | Works on macOS | ❌ | ✅ |
 
-## Architecture
+## 📚 Table of Contents
 
-```
-┌─────────────────┐      ┌──────────────────┐      ┌─────────────────┐
-│                 │      │                  │      │                 │
-│  Python Script  │◄────►│  TCP Socket      │◄────►│  MT5 Terminal   │
-│  (macOS)        │      │  Bridge          │      │  (Windows/VM)   │
-│                 │      │                  │      │                 │
-└─────────────────┘      └──────────────────┘      └─────────────────┘
+- [Quick Start](#quick-start)
+- [Installation](#installation)
+- [Examples](#examples)
+- [Live Data Streaming](#live-data-streaming)
+- [API Reference](#api-reference)
+- [Troubleshooting](#troubleshooting)
+- [Architecture](#architecture)
 
-  MetaTrader5           localhost:8222              MT5Bridge EA
-  Python API                                   (MQL5 Expert Advisor)
-```
+---
 
-## Prerequisites
-
-### Option 1: MetaTrader 5 on Wine/CrossOver (Recommended for local use)
-
-1. Install [CrossOver](https://www.codeweavers.com/crossover) or [Wine](https://www.winehq.org/)
-2. Install MetaTrader 5 in the Wine/CrossOver environment
-3. Compile and run the MT5Bridge EA in MT5
-
-### Option 2: MetaTrader 5 on Windows VM
-
-1. Install a Windows VM (Parallels Desktop, VMware Fusion, or VirtualBox)
-2. Install MetaTrader 5 in the VM
-3. Configure the VM network for host access
-4. Compile and run the MT5Bridge EA in MT5
-
-### Option 3: Remote Windows Machine
-
-1. MetaTrader 5 running on a Windows machine accessible via network
-2. Port 8222 (default) accessible from your Mac
-3. Compile and run the MT5Bridge EA in MT5
-
-## Installation
-
-```bash
-# Clone the repository
-git clone https://github.com/iAmR4j35h/Metatrader5-Mac.git
-cd Metatrader5-Mac
-
-# Install the package
-pip install -e .
-
-# Or for production use
-pip install .
-```
-
-## Setup
-
-### Step 1: Configure the Bridge EA
-
-1. Open MetaTrader 5 (in Wine/VM)
-2. Copy `MQL5/Experts/MT5Bridge/MT5Bridge.mq5` to your MT5 data folder:
-   - In MT5: File → Open Data Folder → MQL5 → Experts
-3. Compile the EA (may need JSON/Socket libraries - see below)
-4. Add the EA to a chart (any symbol)
-5. The EA will listen on port 8222 by default
-
-### Required MQL5 Libraries
-
-The EA requires the following MQL5 libraries:
-
-1. **JAson** - JSON library for MQL5
-   - Download from: https://www.mql5.com/en/code/13663
-   - Place in: `MQL5/Include/JAson.mqh`
-
-2. **Sockets** - Socket library for MQL5
-   - Download from: https://www.mql5.com/en/code/ WSA socket implementation
-   - Alternative: Use built-in `Socket*` functions if available in your MT5 build
-
-### Step 2: Configure Environment Variables (Optional)
-
-```bash
-export MT5_HOST=127.0.0.1    # MT5 Bridge host (default: localhost)
-export MT5_PORT=8222         # MT5 Bridge port (default: 8222)
-export MT5_TIMEOUT=30        # Connection timeout (default: 30 seconds)
-```
-
-## Usage
-
-The API is designed to be compatible with the official Windows MetaTrader5 package:
+## Quick Start
 
 ```python
 import MetaTrader5 as mt5
 
-# Initialize connection to MT5
-if not mt5.initialize():
-    print("Failed to initialize MT5 connection")
-    mt5.shutdown()
-    exit()
+# Connect to MT5 (auto-starts bridge server)
+mt5.initialize()
 
-# Get terminal version
-print(mt5.version())
+# Get real-time BTC price
+tick = mt5.symbol_info_tick("BTCUSD")
+print(f"BTC: ${tick.bid:,.2f}")
 
-# Get account info
-account_info = mt5.account_info()
-if account_info:
-    print(f"Balance: {account_info.balance}")
-    print(f"Equity: {account_info.equity}")
+# Check account
+account = mt5.account_info()
+print(f"Balance: ${account.balance:,.2f}")
 
-# Get symbol info
-tick = mt5.symbol_info_tick("EURUSD")
-if tick:
-    print(f"EURUSD Bid: {tick.bid}, Ask: {tick.ask}")
+# Get historical data
+from datetime import datetime, timedelta
+rates = mt5.copy_rates_range(
+    "EURUSD", mt5.TIMEFRAME_H1,
+    datetime.now() - timedelta(hours=24),
+    datetime.now()
+)
+print(f"Got {len(rates)} hourly candles")
 
-# Get all symbols
-symbols = mt5.symbols_get()
-print(f"Total symbols: {len(symbols)}")
-
-# Get open positions
-positions = mt5.positions_get()
-for pos in positions:
-    print(f"Position {pos.ticket}: {pos.symbol} {pos.volume} lots")
-
-# Send a market order
+# Place a trade (example)
 request = {
     "action": mt5.TRADE_ACTION_DEAL,
     "symbol": "EURUSD",
@@ -160,487 +65,284 @@ request = {
     "type": mt5.ORDER_TYPE_BUY,
     "price": mt5.symbol_info_tick("EURUSD").ask,
     "deviation": 10,
-    "comment": "Test order from macOS",
 }
-
-result = mt5.order_send(request)
-if result.retcode == mt5.TRADE_RETCODE_DONE:
-    print(f"Order executed: {result.order}")
-else:
-    print(f"Order failed: {result.comment}")
-
-# Shutdown
-mt5.shutdown()
-```
-
-## API Reference
-
-This package implements the full MetaTrader5 Python API. Key functions:
-
-### Connection Management
-- `initialize()` - Connect to MT5 bridge
-- `shutdown()` - Disconnect from MT5 bridge
-- `version()` - Get terminal version
-- `last_error()` - Get last error code
-
-### Account Information
-- `account_info()` - Get account details
-- `terminal_info()` - Get terminal information
-
-### Symbol Information
-- `symbols_total()` - Total number of symbols
-- `symbols_get(group)` - Get symbols matching pattern
-- `symbol_info(symbol)` - Get symbol information
-- `symbol_info_tick(symbol)` - Get current tick
-- `symbol_select(symbol, enable)` - Add/remove symbol from Market Watch
-
-### Trading Operations
-- `order_send(request)` - Send trading order
-- `order_check(request)` - Check order before sending
-- `order_calc_margin(...)` - Calculate margin required
-- `order_calc_profit(...)` - Calculate potential profit
-- `Buy(symbol, volume, ...)` - Helper to buy
-- `Sell(symbol, volume, ...)` - Helper to sell
-- `Close(symbol, ...)` - Close positions
-
-### Market Data
-- `copy_rates_from(...)` - Get historical bars
-- `copy_rates_range(...)` - Get bars in date range
-- `copy_ticks_from(...)` - Get historical ticks
-- `copy_ticks_range(...)` - Get ticks in date range
-- `market_book_add(symbol)` - Subscribe to market depth
-- `market_book_get(symbol)` - Get market depth
-- `market_book_release(symbol)` - Unsubscribe from market depth
-
-### Order/Position Management
-- `orders_total()` - Get number of pending orders
-- `orders_get(...)` - Get pending orders
-- `positions_total()` - Get number of open positions
-- `positions_get(...)` - Get open positions
-- `history_orders_total(from, to)` - Get historical order count
-- `history_orders_get(...)` - Get historical orders
-- `history_deals_total(from, to)` - Get historical deal count
-- `history_deals_get(...)` - Get historical deals
-
-## Timeframes
-
-All standard MT5 timeframes are supported:
-- `TIMEFRAME_M1`, `TIMEFRAME_M2`, `TIMEFRAME_M3`, `TIMEFRAME_M4`, `TIMEFRAME_M5`
-- `TIMEFRAME_M6`, `TIMEFRAME_M10`, `TIMEFRAME_M12`, `TIMEFRAME_M15`, `TIMEFRAME_M20`
-- `TIMEFRAME_M30`
-- `TIMEFRAME_H1`, `TIMEFRAME_H2`, `TIMEFRAME_H3`, `TIMEFRAME_H4`, `TIMEFRAME_H6`
-- `TIMEFRAME_H8`, `TIMEFRAME_H12`
-- `TIMEFRAME_D1`, `TIMEFRAME_W1`, `TIMEFRAME_MN1`
-
-## Constants
-
-All MT5 constants are available:
-- Order types: `ORDER_TYPE_BUY`, `ORDER_TYPE_SELL`, etc.
-- Trade actions: `TRADE_ACTION_DEAL`, `TRADE_ACTION_PENDING`, etc.
-- Order filling: `ORDER_FILLING_FOK`, `ORDER_FILLING_IOC`, etc.
-- Position types: `POSITION_TYPE_BUY`, `POSITION_TYPE_SELL`
-- Deal types: `DEAL_TYPE_BUY`, `DEAL_TYPE_SELL`, etc.
-- Return codes: `TRADE_RETCODE_DONE`, `TRADE_RETCODE_REQUOTE`, etc.
-
-## Error Handling
-
-All functions return `None` on error. Check `last_error()` for error codes:
-
-```python
-import MetaTrader5 as mt5
-
-tick = mt5.symbol_info_tick("INVALID")
-if tick is None:
-    error_code = mt5.last_error()
-    print(f"Error: {error_code}")
-    # RES_E_NOT_FOUND = -4 (symbol not found)
-```
-
-Common error codes:
-- `RES_S_OK` (1) - Success
-- `RES_E_FAIL` (-1) - Generic error
-- `RES_E_INVALID_PARAMS` (-2) - Invalid parameters
-- `RES_E_NOT_FOUND` (-4) - Not found
-- `RES_E_INTERNAL_FAIL_CONNECT` (-10004) - Cannot connect to bridge
-- `RES_E_INTERNAL_FAIL_TIMEOUT` (-10005) - Connection timeout
-
-## Differences from Windows Version
-
-1. **Connection**: Requires running the MT5Bridge EA in MT5 (Windows version connects directly)
-2. **Path parameter**: `initialize(path)` is ignored (path only relevant on Windows)
-3. **Network dependency**: Requires network connection to MT5 (even for local Wine)
-4. **Performance**: Slightly slower due to network overhead (still very fast for most use cases)
-5. **Installation**: Requires manual setup of the MQL5 bridge
-
-## Troubleshooting
-
-### Cannot connect to MT5
-
-1. Verify MT5 is running with the Bridge EA attached
-2. Check the EA is running (look for "MT5 Bridge listening" in MT5 Experts tab)
-3. Verify firewall settings allow port 8222
-4. Check environment variables: `MT5_HOST` and `MT5_PORT`
-
-### Bridge EA compilation errors
-
-1. Install required MQL5 libraries (JAson, Sockets)
-2. Make sure to use "Compile" button (F7) in MetaEditor
-3. Check MT5 version is up to date
-
-### ModuleNotFoundError
-
-Make sure you're installing on macOS/Linux, not Windows:
-```bash
-python -c "import sys; print(sys.platform)"  # Should print 'darwin' on Mac
-```
-
-## Performance Considerations
-
-- The socket connection adds minimal latency (~1-2ms for local connections)
-- Use `symbol_info_tick()` for real-time data
-- Batch historical data requests when possible
-- Consider using `market_book_add()` only when needed (increases data transfer)
-
-## Security Notes
-
-1. **Network Access**: The bridge EA opens a TCP socket. By default, it only listens on localhost (127.0.0.1).
-2. **Remote Access**: To allow remote connections, set `AllowRemote = true` in the EA settings (not recommended for production).
-3. **Authentication**: The current implementation does not include authentication. Only use on trusted networks.
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature-name`
-3. Commit your changes: `git commit -am 'Add feature'`
-4. Push to the branch: `git push origin feature-name`
-5. Submit a pull request
-
-## License
-
-MIT License - see LICENSE file for details.
-
-## Disclaimer
-
-This is an unofficial implementation. MetaQuotes Software Corp. is not affiliated with this project. Use at your own risk. Trading forex and CFDs carries a high risk of losing money.
-
-## Credits
-
-- Original MetaTrader5 Python API by MetaQuotes Ltd.
-- macOS implementation by reverse engineering the Windows API
-- MQL5 JSON library by various contributors on MQL5.com
-
-## Examples
-
-The `examples/` directory contains ready-to-use scripts:
-
-### `fetch_btc_data.py` - Comprehensive BTC Data Fetcher
-
-Fetches complete Bitcoin data from MT5:
-
-```bash
-python examples/fetch_btc_data.py
-```
-
-Features:
-- Automatically finds BTC symbol (BTCUSD, BTCUSDT, XBTUSD, etc.)
-- Displays current price, spread, and market info
-- Fetches hourly and daily OHLCV data
-- Retrieves historical tick data
-- Shows trading conditions and margin requirements
-- Displays open positions for BTC
-
-### `test_btc_api.py` - API Test Suite
-
-Tests all major API functions with BTC:
-
-```bash
-python examples/test_btc_api.py
-```
-
-Tests:
-- Connection to MT5
-- Account info retrieval
-- BTC symbol discovery
-- Historical data fetching
-- Position and order retrieval
-- Margin calculation
-- Demo trade request structure
-
-### `basic_usage.py` - Getting Started
-
-Simple introduction to the API:
-
-```bash
-python examples/basic_usage.py
-```
-
-Shows:
-- Basic connection
-- Terminal and account info
-- Symbol listing
-- Tick data retrieval
-- Position checking
-
-## Quick Start for BTC Trading
-
-```python
-import MetaTrader5 as mt5
-from datetime import datetime, timedelta
-
-# Connect
-mt5.initialize()
-
-# Get BTC price
-tick = mt5.symbol_info_tick("BTCUSD")
-print(f"BTC: Bid=${tick.bid}, Ask=${tick.ask}")
-
-# Get last 24 hours of hourly data
-rates = mt5.copy_rates_from(
-    "BTCUSD",
-    mt5.TIMEFRAME_H1,
-    datetime.now() - timedelta(hours=24),
-    24
-)
-
-# Calculate SMA
-closes = [r.close for r in rates]
-sma = sum(closes) / len(closes)
-print(f"24H SMA: ${sma:,.2f}")
-
-# Check positions
-positions = mt5.positions_get(symbol="BTCUSD")
-print(f"Open BTC positions: {len(positions)}")
+# result = mt5.order_send(request)  # Uncomment to trade
 
 # Disconnect
 mt5.shutdown()
 ```
 
-## Project Structure
+---
 
-```
-metatrader5-macos/
-├── MetaTrader5/              # Python package
-│   ├── __init__.py          # Main module with constants
-│   ├── _core.py             # Full JSON protocol implementation
-│   └── _core_simple.py      # Text protocol (simpler bridge)
-├── MQL5/
-│   └── Experts/MT5Bridge/   # MQL5 Expert Advisors
-│       ├── MT5Bridge.mq5       # Full-featured (needs JSON lib)
-│       └── MT5BridgeSimple.mq5  # Simple (no external libs)
-├── examples/                 # Example scripts
-│   ├── basic_usage.py
-│   ├── fetch_btc_data.py
-│   └── test_btc_api.py
-├── setup.py                 # Package setup
-├── pyproject.toml           # Modern packaging
-└── README.md                # This file
-```
+## Installation
 
-## Advanced Configuration
+### Prerequisites
 
-### Using Custom Host/Port
+You need MetaTrader 5 running on your Mac via one of:
 
-```python
-import MetaTrader5 as mt5
-import os
+1. **[CrossOver](https://www.codeweavers.com/crossover)** (Recommended - easiest)
+2. **[Wine](https://www.winehq.org/)** (Free alternative)
+3. **Windows VM** (Parallels, VMware, VirtualBox)
+4. **Remote Windows PC** (accessible via network)
 
-# Method 1: Environment variables
-os.environ['MT5_HOST'] = '192.168.1.100'  # Remote MT5
-os.environ['MT5_PORT'] = '9000'
-mt5.initialize()
+### Step 1: Install Python Package
 
-# Method 2: Direct connection (not yet implemented)
-# Future versions may support:
-# mt5.initialize(host='192.168.1.100', port=9000)
+```bash
+# Clone and install
+git clone https://github.com/iAmR4j35h/Metatrader5-Mac.git
+cd Metatrader5-Mac
+pip install -e .
+
+# Or directly from GitHub
+pip install git+https://github.com/iAmR4j35h/Metatrader5-Mac.git
 ```
 
-### Running Multiple Instances
+### Step 2: Install MT5 Bridge EA
 
-You can run multiple Python scripts simultaneously:
+1. Open MetaTrader 5 (in Wine/VM)
+2. Copy `MQL5/Experts/MT5Bridge/MT5Bridge.mq5` to your MT5 Data Folder:
+   - In MT5: **File → Open Data Folder → MQL5 → Experts**
+3. Compile the EA in MetaEditor (F7)
+4. Attach the EA to any chart
+5. Check the "Experts" tab - you should see "MT5 Bridge connected"
 
-```python
-# Script 1: Price monitor
-import MetaTrader5 as mt5
-mt5.initialize()
-while True:
-    tick = mt5.symbol_info_tick("BTCUSD")
-    print(f"Price: {tick.bid}")
-    time.sleep(1)
+### Step 3: Run an Example
+
+```bash
+python examples/basic_usage.py
 ```
 
-```python
-# Script 2: Trading bot
-import MetaTrader5 as mt5
-mt5.initialize()
-# ... trading logic ...
+---
+
+## Examples
+
+All examples auto-start the bridge server and work out of the box:
+
+### Basic Examples
+
+| Script | Description | Command |
+|--------|-------------|---------|
+| `basic_usage.py` | Introduction to the API | `python examples/basic_usage.py` |
+| `login_and_show_balance.py` | Login & display account info | `python examples/login_and_show_balance.py` |
+| `fetch_btc_data.py` | Comprehensive BTC data fetcher | `python examples/fetch_btc_data.py` |
+| `test_btc_api.py` | Test all API functions with BTC | `python examples/test_btc_api.py` |
+
+### Live Streaming Examples ⭐ NEW
+
+| Script | Description | Command |
+|--------|-------------|---------|
+| `live_data_stream.py` | Real-time price stream with trend detection | `python examples/live_data_stream.py` |
+| `live_stream_advanced.py` | High-frequency streaming (100ms polling) | `python examples/live_stream_advanced.py` |
+
+#### Live Stream Features:
+- **Real-time updates**: 1-second or 100ms refresh rates
+- **Trend detection**: Bullish/Bearish/Neutral indicators
+- **Session statistics**: High, low, range, tick count
+- **Price change tracking**: Up/down arrows with values
+- **Auto-detect symbols**: Finds BTCUSD, BTCUSDm, etc.
+
+Example output:
+```
+[14:32:05] 🟢 Bid:   77,574.31 Ask:   77,588.31 Last:   77,580.00 Spread: 14.00 Change: +12.50 ↑ Vol: 152
+[14:32:06] 🟢 Bid:   77,575.12 Ask:   77,589.12 Last:   77,581.20 Spread: 14.00 Change:  +1.20 ↑ Vol: 89
 ```
 
-Each script maintains its own connection to the MT5 bridge.
+---
 
-## Common Use Cases
+## Live Data Streaming
 
-### 1. Price Alert System
+### Basic Polling (1 second)
 
 ```python
 import MetaTrader5 as mt5
 import time
 
 mt5.initialize()
-target_price = 70000.0
+
+symbol = "BTCUSDm"
+last_price = None
 
 while True:
-    tick = mt5.symbol_info_tick("BTCUSD")
-    if tick.ask >= target_price:
-        print(f"Alert: BTC reached ${tick.ask}!")
-        # Send notification, email, etc.
-        break
-    time.sleep(5)
-
-mt5.shutdown()
+    tick = mt5.symbol_info_tick(symbol)
+    if tick:
+        if last_price != tick.last:
+            print(f"{symbol}: ${tick.last:,.2f}")
+            last_price = tick.last
+    time.sleep(1)
 ```
 
-### 2. Simple Trading Bot
+### High-Frequency Streaming (100ms)
 
 ```python
 import MetaTrader5 as mt5
+from collections import deque
+import time
 
 mt5.initialize()
 
-# Get current price
-tick = mt5.symbol_info_tick("EURUSD")
+symbol = "EURUSD"
+ticks = deque(maxlen=1000)
 
-# Calculate SMA
-from datetime import datetime, timedelta
-rates = mt5.copy_rates_from(
-    "EURUSD", mt5.TIMEFRAME_H1,
-    datetime.now() - timedelta(hours=20), 20
-)
-sma = sum(r.close for r in rates) / len(rates)
-
-# Trading logic
-if tick.ask > sma:
-    # Buy above SMA
-    request = {
-        "action": mt5.TRADE_ACTION_DEAL,
-        "symbol": "EURUSD",
-        "volume": 0.1,
-        "type": mt5.ORDER_TYPE_BUY,
-        "price": tick.ask,
-        "deviation": 10,
-    }
-    result = mt5.order_send(request)
-    print(f"Trade result: {result}")
-
-mt5.shutdown()
+while True:
+    tick = mt5.symbol_info_tick(symbol)
+    if tick:
+        ticks.append({
+            'time': time.time(),
+            'bid': tick.bid,
+            'ask': tick.ask,
+            'last': tick.last
+        })
+    time.sleep(0.1)  # 100ms = 10 updates/second
 ```
 
-### 3. Data Export to CSV
+---
 
-```python
-import MetaTrader5 as mt5
-import pandas as pd
+## API Reference
 
-mt5.initialize()
+### Connection
+- `initialize()` - Connect to MT5 (auto-starts bridge)
+- `shutdown()` - Disconnect from MT5
+- `version()` - Get terminal version
+- `last_error()` - Get last error code
 
-# Get data
-rates = mt5.copy_rates_range(
-    "BTCUSD", mt5.TIMEFRAME_H1,
-    datetime(2024, 1, 1), datetime(2024, 1, 31)
-)
+### Account
+- `account_info()` - Account details (balance, equity, margin)
+- `terminal_info()` - Terminal information
 
-# Convert to DataFrame
-df = pd.DataFrame(rates)
-df['time'] = pd.to_datetime(df['time'], unit='s')
+### Market Data
+- `symbol_info_tick(symbol)` - Current price (bid/ask/last)
+- `symbol_info(symbol)` - Symbol details
+- `symbols_get()` - List all symbols
+- `copy_rates_range(symbol, timeframe, from, to)` - Historical OHLCV
+- `copy_ticks_from(symbol, from, count)` - Historical ticks
 
-# Save to CSV
-df.to_csv('btc_january_2024.csv', index=False)
-print("Data exported to btc_january_2024.csv")
+### Trading
+- `order_send(request)` - Execute trade
+- `order_check(request)` - Validate order
+- `order_calc_margin(...)` - Calculate margin required
+- `positions_get()` - Get open positions
+- `orders_get()` - Get pending orders
+- `Close(symbol)` - Close positions
 
-mt5.shutdown()
-```
+### Timeframes
+`TIMEFRAME_M1`, `TIMEFRAME_M5`, `TIMEFRAME_M15`, `TIMEFRAME_H1`, `TIMEFRAME_H4`, `TIMEFRAME_D1`, `TIMEFRAME_W1`, `TIMEFRAME_MN1`
 
-## Comparison with Windows Version
+### Order Types
+`ORDER_TYPE_BUY`, `ORDER_TYPE_SELL`, `ORDER_TYPE_BUY_LIMIT`, `ORDER_TYPE_SELL_LIMIT`, etc.
 
-| Feature | Windows (Official) | macOS (This Package) |
-|---------|-------------------|----------------------|
-| Connection | Direct Named Pipe | TCP Socket via Bridge |
-| Setup | `pip install` | `pip install` + Bridge EA |
-| Performance | Native | ~1-2ms overhead |
-| Real-time Data | Yes | Yes |
-| Trading | Yes | Yes |
-| Historical Data | Yes | Yes |
-| Multi-symbol | Yes | Yes |
-| Indicators | No | No |
-| Chart Operations | No | No |
+---
 
 ## Troubleshooting
 
-### Cannot connect to MT5
+### ❌ "Cannot connect to MT5 bridge"
 
-1. Verify MT5 is running with the Bridge EA attached
-2. Check the EA is running (look for "MT5 Bridge listening" in MT5 Experts tab)
-3. Verify firewall settings allow port 8222
-4. Check environment variables: `MT5_HOST` and `MT5_PORT`
+1. ✅ MT5 is running with Bridge EA attached
+2. ✅ EA shows "Connected to Python server" in Experts tab
+3. ✅ Port 8222 not blocked by firewall
+4. ✅ Bridge server is running (`python -m MetaTrader5`)
 
-### Bridge EA compilation errors
+### ❌ "Address already in use"
 
-1. Install required MQL5 libraries (JAson, Sockets)
-2. Make sure to use "Compile" button (F7) in MetaEditor
-3. Check MT5 version is up to date
+The bridge server is already running. Examples auto-detect this - just run again.
 
-### ModuleNotFoundError
+### ❌ "Symbol not found"
 
-Make sure you're installing on macOS/Linux, not Windows:
-```bash
-python -c "import sys; print(sys.platform)"  # Should print 'darwin' on Mac
-```
-
-### Getting "Symbol not found" errors
-
-Not all brokers offer the same symbols. Check available symbols:
-
+Different brokers use different symbol names:
 ```python
-import MetaTrader5 as mt5
-mt5.initialize()
-symbols = mt5.symbols_get()
+# Try these variations
+symbols = ['BTCUSD', 'BTCUSDm', 'BTCUSDT', 'XBTUSD']
 for s in symbols:
-    if 'BTC' in str(s) or 'ETH' in str(s):
-        print(s)
+    if mt5.symbol_info(s):
+        print(f"Found: {s}")
+        break
 ```
 
-### Connection timeouts
+### Environment Variables
 
-Increase timeout value:
 ```bash
-export MT5_TIMEOUT=60
+export MT5_HOST=127.0.0.1    # Bridge server host
+export MT5_PORT=8222           # Bridge server port
+export MT5_TIMEOUT=30          # Connection timeout
 ```
 
-## Performance Considerations
+---
 
-- The socket connection adds minimal latency (~1-2ms for local connections)
-- Use `symbol_info_tick()` for real-time data
-- Batch historical data requests when possible
-- Consider using `market_book_add()` only when needed (increases data transfer)
-- Reuse connections - don't initialize/shutdown repeatedly
+## Architecture
 
-## Security Notes
+```
+┌─────────────────┐      ┌──────────────────┐      ┌─────────────────┐
+│   Python Script │◄────►│  TCP Socket      │◆────►│  MT5 Terminal   │
+│   (Your Mac)    │      │  Bridge Server   │      │  (Wine/VM/PC)   │
+│                 │      │  localhost:8222  │      │                 │
+└─────────────────┘      └──────────────────┘      └─────────────────┘
+        ▲                        ▲                           │
+        │                        │                           │
+   Calls API              Forwards requests              MT5Bridge EA
+   (mt5.*)              (Python ↔ MT5)                 (MQL5)
+```
 
-1. **Network Access**: The bridge EA opens a TCP socket. By default, it only listens on localhost (127.0.0.1).
-2. **Remote Access**: To allow remote connections, set `AllowRemote = true` in the EA settings (not recommended for production).
-3. **Authentication**: The current implementation does not include authentication. Only use on trusted networks.
-4. **API Keys**: Never commit API keys or passwords to version control
+**Protocol**: Text-based IPC via TCP socket
+- Commands: `CMD|param1=value1|param2=value2\n`
+- Responses: `OK|field=value|...` or `ERR|code=X|message=text`
+
+---
+
+## Project Structure
+
+```
+Metatrader5-Mac/
+├── MetaTrader5/                 # Python package
+│   ├── __init__.py             # Main API module
+│   ├── _core.py                # Socket protocol implementation
+│   ├── _bridge_server.py       # Bridge server (internal)
+│   └── __main__.py             # `python -m MetaTrader5`
+├── MQL5/Experts/MT5Bridge/      # MT5 Expert Advisors
+│   └── MT5Bridge.mq5            # Bridge EA (compile in MT5)
+├── examples/                     # Ready-to-use examples
+│   ├── basic_usage.py
+│   ├── login_and_show_balance.py
+│   ├── fetch_btc_data.py
+│   ├── test_btc_api.py
+│   ├── live_data_stream.py      # ⭐ Real-time streaming
+│   └── live_stream_advanced.py  # ⭐ High-frequency stream
+├── setup.py
+├── pyproject.toml
+└── README.md
+```
+
+---
+
+## Security
+
+- **Localhost only**: Bridge defaults to `127.0.0.1` (no external access)
+- **No authentication**: Use only on trusted networks
+- **No passwords stored**: Login handled by MT5, not this package
+
+---
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature-name`
+3. Commit: `git commit -am 'Add feature'`
+4. Push: `git push origin feature-name`
+5. Open a Pull Request
+
+---
+
+## License
+
+MIT License - See [LICENSE](LICENSE) for details.
+
+## Disclaimer
+
+Unofficial implementation. MetaQuotes Software Corp. is not affiliated with this project. Trading forex/CFDs carries high risk of losing money.
 
 ## Support
 
-For issues and feature requests, please use the [GitHub issue tracker](https://github.com/iAmR4j35h/Metatrader5-Mac/issues).
+- 🐛 [GitHub Issues](https://github.com/iAmR4j35h/Metatrader5-Mac/issues)
+- 📖 [Official MT5 Docs](https://www.mql5.com/en/docs/integration/python_metatrader5)
 
-For MT5-specific questions, refer to the official MQL5 documentation:
-https://www.mql5.com/en/docs/integration/python_metatrader5
+---
 
-## Contributors
-
-- [@iAmR4j35h](https://github.com/iAmR4j35h) - Creator and maintainer
-
-## Star History
-
-If you find this project useful, please consider giving it a ⭐ on GitHub!
+**⭐ Star this repo if you find it useful!**
