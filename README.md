@@ -5,6 +5,8 @@
 [![GitHub stars](https://img.shields.io/github/stars/iAmR4j35h/Metatrader5-Mac)](https://github.com/iAmR4j35h/Metatrader5-Mac/stargazers)
 [![GitHub issues](https://img.shields.io/github/issues/iAmR4j35h/Metatrader5-Mac)](https://github.com/iAmR4j35h/Metatrader5-Mac/issues)
 
+> ☕ **[Support this project](#support--donate)** – Help keep this macOS port maintained!
+
 > 🚀 **Trade on MetaTrader 5 from your Mac!** A reverse-engineered, macOS-compatible Python API for MetaTrader 5.
 
 ## Why This Package?
@@ -338,9 +340,30 @@ MIT License - See [LICENSE](LICENSE) for details.
 
 Unofficial implementation. MetaQuotes Software Corp. is not affiliated with this project. Trading forex/CFDs carries high risk of losing money.
 
-## Support
+## Support & Donate ☕
 
-- 🐛 [GitHub Issues](https://github.com/iAmR4j35h/Metatrader5-Mac/issues)
+If this project helped you trade on macOS, consider supporting its development:
+
+### Quick Donate
+- **GitHub Sponsors**: [github.com/sponsors/iAmR4j35h](https://github.com/sponsors/iAmR4j35h) ⭐ (Zero fees!)
+- **Buy Me a Coffee**: [buymeacoffee.com/iamr4j35h](https://buymeacoffee.com/iamr4j35h) ☕
+- **PayPal**: [paypal.me/iamr4j35h](https://paypal.me/iamr4j35h)
+
+### Crypto
+- **BTC**: `bc1q...your_address...` (add your wallet)
+- **ETH/USDT**: `0x...your_address...` (add your wallet)
+
+### What Your Support Covers
+- 🐛 Bug fixes and maintenance
+- ✨ New features (more brokers, indicators, etc.)
+- 📚 Documentation and tutorials
+- 🍎 Testing on latest macOS versions
+
+---
+
+**Other Ways to Support**
+- ⭐ Star this repository
+- 🐛 Report bugs via [GitHub Issues](https://github.com/iAmR4j35h/Metatrader5-Mac/issues)
 - 📖 [Official MT5 Docs](https://www.mql5.com/en/docs/integration/python_metatrader5)
 
 ---
