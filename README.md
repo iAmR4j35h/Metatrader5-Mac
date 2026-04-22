@@ -24,7 +24,6 @@ The official `metatrader5` Python package only works on **Windows** (uses Window
 
 ## 📚 Table of Contents
 
-- [AI Setup Prompt](#ai-setup-prompt) 🤖
 - [Quick Start](#quick-start)
 - [Installation](#installation)
 - [Examples](#examples)
@@ -32,26 +31,6 @@ The official `metatrader5` Python package only works on **Windows** (uses Window
 - [API Reference](#api-reference)
 - [Troubleshooting](#troubleshooting)
 - [Architecture](#architecture)
-
----
-
-## 🚀 AI Setup Prompt
-
-**Want AI to set this up for you?** Copy and paste this prompt to your AI agent (Claude, ChatGPT, etc.):
-
-```
-I want to set up MetaTrader5 on my Mac using this repository: https://github.com/iAmR4j35h/Metatrader5-Mac
-
-Please help me:
-1. Clone the repository and install the Python package
-2. Set up the MT5 Bridge EA in my MetaTrader 5 (running in Wine/CrossOver/VM)
-3. Copy MQL5/Experts/MT5Bridge/MT5BridgeClient.mq5 to the correct MT5 Data Folder
-4. Compile the EA in MetaEditor
-5. Attach the EA to a chart in MT5
-6. Run examples/basic_usage.py to verify the connection works
-
-If there are any errors during setup, troubleshoot them and fix issues automatically.
-```
 
 ---
 
