@@ -5,7 +5,16 @@ BTC API Test Script - MetaTrader5 macOS
 This script tests the MetaTrader5 API for fetching Bitcoin data.
 It demonstrates all the key functions needed for BTC trading.
 
-Run this AFTER connecting MT5 with the Bridge EA attached.
+Usage:
+    # First, start the bridge server (Terminal 1):
+    python -m MetaTrader5
+
+    # Then run this test (Terminal 2):
+    python test_btc_api.py
+
+Requirements:
+    - Bridge server running (python -m MetaTrader5)
+    - MetaTrader 5 running with MT5Bridge EA attached
 
 Author: MT5 macOS Port
 """
@@ -23,9 +32,12 @@ def test_connection():
         print("✗ Failed to connect to MT5")
         print(f"  Error code: {mt5.last_error()}")
         print("\nPlease ensure:")
-        print("  1. MetaTrader 5 is running")
-        print("  2. MT5Bridge EA is attached to a chart")
-        print("  3. EA shows 'Listening on port 8222'")
+        print("  1. Bridge server is running:")
+        print("     python -m MetaTrader5")
+        print()
+        print("  2. MetaTrader 5 is running")
+        print("  3. MT5Bridge EA is attached to a chart")
+        print("  4. EA shows 'Connected to Python server'")
         return False
 
     print("✓ Connected to MT5")

@@ -3,19 +3,24 @@
 MetaTrader 5 Login and Balance Display Script
 
 This script demonstrates how to:
-1. Connect to MT5
+1. Connect to MT5 (optionally start bridge server)
 2. Login to a trading account (or use existing logged-in account)
 3. Display comprehensive account information
 4. Show balance, equity, margin, and other metrics
 
 Usage:
+    # First, start the bridge server (Terminal 1):
+    python -m MetaTrader5
+
+    # Then run this script (Terminal 2):
     python login_and_show_balance.py
 
-    Or with arguments:
+    # Or with arguments:
     python login_and_show_balance.py --login 123456 --server "Broker-Demo"
 
 Requirements:
     - MetaTrader 5 running with MT5Bridge EA attached
+    - Bridge server running (python -m MetaTrader5)
     - Valid trading account credentials (optional if already logged in)
 
 Author: MetaTrader5 macOS Port
@@ -113,6 +118,10 @@ def connect_to_mt5(args):
 
     print("[1/4] Connecting to MetaTrader 5...")
     print("-" * 70)
+    print()
+    print("Note: Make sure bridge server is running in another terminal:")
+    print("      python -m MetaTrader5")
+    print()
 
     # Prepare initialization parameters
     init_params = {}
@@ -157,14 +166,17 @@ def connect_to_mt5(args):
 
         print()
         print("Troubleshooting:")
-        print("  • Make sure MetaTrader 5 is running")
-        print("  • Attach MT5Bridge EA to a chart in MT5")
-        print("  • Check that the EA shows 'Listening on port 8222'")
-        print("  • Verify firewall settings allow port 8222")
+        print("  1. Start the bridge server (in another terminal):")
+        print("     python -m MetaTrader5")
+        print()
+        print("  2. Make sure MetaTrader 5 is running")
+        print("  3. Attach MT5Bridge EA to a chart in MT5")
+        print("  4. Check that the EA shows 'Connected to Python server'")
+        print("  5. Verify firewall settings allow port 8222")
         print()
         print("Environment variables:")
-        print("  export MT5_HOST=127.0.0.1  # MT5 IP address")
-        print("  export MT5_PORT=8222         # MT5 bridge port")
+        print("  export MT5_HOST=127.0.0.1  # Bridge server host")
+        print("  export MT5_PORT=8222       # Bridge server port")
         return False
 
     print()

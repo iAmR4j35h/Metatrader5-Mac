@@ -6,9 +6,14 @@ This script demonstrates how to fetch various data for Bitcoin (BTC)
 from MetaTrader 5 using the macOS-compatible Python API.
 
 Usage:
+    # First, start the bridge server (Terminal 1):
+    python -m MetaTrader5
+
+    # Then run this script (Terminal 2):
     python fetch_btc_data.py
 
 Requirements:
+    - Bridge server running (python -m MetaTrader5)
     - MetaTrader 5 running with MT5Bridge EA attached
     - BTCUSD or BTCUSDT symbol available in MT5
     - Internet connection for real-time data
@@ -38,14 +43,17 @@ def connect_to_mt5():
         print(f"    Error code: {mt5.last_error()}")
         print()
         print("Troubleshooting:")
-        print("  • Make sure MT5 is running (in Wine/CrossOver or VM)")
-        print("  • Attach the MT5Bridge EA to any chart in MT5")
-        print("  • Check that the EA shows 'Listening on port 8222'")
-        print("  • Verify firewall settings allow port 8222")
+        print("  1. Start the bridge server (in another terminal):")
+        print("     python -m MetaTrader5")
+        print()
+        print("  2. Make sure MT5 is running (in Wine/CrossOver or VM)")
+        print("  3. Attach the MT5Bridge EA to any chart in MT5")
+        print("  4. Check that the EA shows 'Connected to Python server'")
+        print("  5. Verify firewall settings allow port 8222")
         print()
         print("Environment variables:")
-        print("  export MT5_HOST=127.0.0.1  # or your MT5 IP")
-        print("  export MT5_PORT=8222")
+        print("  export MT5_HOST=127.0.0.1  # Bridge server host")
+        print("  export MT5_PORT=8222       # Bridge server port")
         return False
 
     print("    ✓ Connected successfully!")

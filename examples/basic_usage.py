@@ -3,35 +3,63 @@
 Basic example of using MetaTrader5 on macOS.
 
 This example demonstrates how to:
-1. Connect to MT5 running in Wine/CrossOver or VM
-2. Get account information
-3. Retrieve symbol data
-4. Place a trade (commented out for safety)
+1. Start the bridge server (optional - can run separately)
+2. Connect to MT5 running in Wine/CrossOver or VM
+3. Get account information
+4. Retrieve symbol data
+5. Place a trade (commented out for safety)
 
 Prerequisites:
 - MT5 running with MT5Bridge EA attached
-- Environment variables set (optional):
-    export MT5_HOST=127.0.0.1
-    export MT5_PORT=8222
+- Bridge server running (see below)
+
+Running the Bridge Server:
+    Option 1: Run separately
+        $ python -m MetaTrader5
+
+    Option 2: Start programmatically (see commented code below)
+        server = mt5.start_bridge_server()
+
+    Option 3: Console script (after pip install)
+        $ mt5-bridge-server
+
+Environment variables (optional):
+    export MT5_HOST=127.0.0.1  # Bridge server host
+    export MT5_PORT=8222       # Bridge server port
 """
 
 import MetaTrader5 as mt5
 from datetime import datetime
+import time
 
 
 def main():
     print("MetaTrader5 macOS Example")
     print("=" * 50)
 
+    # Optional: Start bridge server programmatically
+    # Uncomment the following lines if you want to start the server from this script
+    # Note: You can also run 'python -m MetaTrader5' in a separate terminal
+    #
+    # print("\n[Optional] Starting bridge server...")
+    # server = mt5.start_bridge_server()
+    # time.sleep(2)  # Wait for server to start and MT5 to connect
+    #
+    # Or check if server is already running - if not, you need to start it
+    # separately with: python -m MetaTrader5
+
     # Initialize connection
     print("\n1. Connecting to MT5...")
+    print("   (Make sure bridge server is running: python -m MetaTrader5)")
     if not mt5.initialize():
         print("Failed to connect to MT5!")
         print(f"Error code: {mt5.last_error()}")
         print("\nMake sure:")
-        print("  - MT5 is running (in Wine/VM)")
-        print("  - MT5Bridge EA is attached to a chart")
-        print("  - Port 8222 is accessible")
+        print("  1. Bridge server is running:")
+        print("     python -m MetaTrader5")
+        print("  2. MT5 is running (in Wine/VM)")
+        print("  3. MT5Bridge EA is attached to a chart in MT5")
+        print("  4. EA shows 'Connected to Python server'")
         return
 
     print("Connected successfully!")
@@ -124,6 +152,12 @@ def main():
     print("\n9. Disconnecting...")
     mt5.shutdown()
     print("Disconnected successfully!")
+
+    # Optional: Stop bridge server if started programmatically
+    # if 'server' in locals():
+    #     print("Stopping bridge server...")
+    #     server.stop()
+    #     print("Server stopped!")
 
     print("\n" + "=" * 50)
     print("Example completed!")
