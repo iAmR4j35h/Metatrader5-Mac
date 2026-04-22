@@ -6,21 +6,61 @@ This script tests the MetaTrader5 API for fetching Bitcoin data.
 It demonstrates all the key functions needed for BTC trading.
 
 Usage:
-    # First, start the bridge server (Terminal 1):
-    python -m MetaTrader5
-
-    # Then run this test (Terminal 2):
     python test_btc_api.py
 
 Requirements:
-    - Bridge server running (python -m MetaTrader5)
     - MetaTrader 5 running with MT5Bridge EA attached
+    - Bridge server (auto-started or run manually with: python -m MetaTrader5)
 
 Author: MT5 macOS Port
 """
 
 import MetaTrader5 as mt5
 from datetime import datetime, timedelta
+import subprocess
+import time
+import sys
+
+# ============================================================
+# CONFIGURATION
+# ============================================================
+AUTO_START_SERVER = True  # Set to False to run server manually
+BRIDGE_HOST = '127.0.0.1'
+BRIDGE_PORT = 8222
+SERVER_STARTUP_DELAY = 3
+# ============================================================
+
+
+def start_bridge_server():
+    """Start bridge server as a subprocess."""
+    print("[Auto] Starting bridge server...")
+    print(f"  Host: {BRIDGE_HOST}")
+    print(f"  Port: {BRIDGE_PORT}")
+
+    try:
+        process = subprocess.Popen(
+            [sys.executable, '-m', 'MetaTrader5'],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+
+        print(f"[Auto] Waiting {SERVER_STARTUP_DELAY}s for server startup...")
+        time.sleep(SERVER_STARTUP_DELAY)
+
+        if process.poll() is not None:
+            stdout, stderr = process.communicate()
+            print("✗ Server failed to start!")
+            print(f"Output: {stdout}")
+            print(f"Errors: {stderr}")
+            return None
+
+        print("✓ Bridge server started")
+        return process
+
+    except Exception as e:
+        print(f"✗ Failed to start server: {e}")
+        return None
 
 
 def test_connection():
@@ -28,16 +68,25 @@ def test_connection():
     print("Testing MT5 Connection...")
     print("-" * 50)
 
+    if not AUTO_START_SERVER:
+        print("(Make sure bridge server is running: python -m MetaTrader5)")
+
     if not mt5.initialize():
         print("✗ Failed to connect to MT5")
         print(f"  Error code: {mt5.last_error()}")
         print("\nPlease ensure:")
-        print("  1. Bridge server is running:")
-        print("     python -m MetaTrader5")
-        print()
-        print("  2. MetaTrader 5 is running")
-        print("  3. MT5Bridge EA is attached to a chart")
-        print("  4. EA shows 'Connected to Python server'")
+        if AUTO_START_SERVER:
+            print("  1. Bridge server was auto-started")
+            print("  2. MetaTrader 5 is running")
+            print("  3. MT5Bridge EA is attached to a chart")
+            print("  4. EA shows 'Connected to Python server'")
+        else:
+            print("  1. Bridge server is running:")
+            print("     python -m MetaTrader5")
+            print()
+            print("  2. MetaTrader 5 is running")
+            print("  3. MT5Bridge EA is attached to a chart")
+            print("  4. EA shows 'Connected to Python server'")
         return False
 
     print("✓ Connected to MT5")
@@ -234,14 +283,29 @@ def demo_trade_request(symbol):
 
 def main():
     """Main function."""
+    server_process = None
+
     print("=" * 50)
     print("BTC API Test - MetaTrader5 macOS")
     print("=" * 50)
 
+    # Auto-start bridge server if enabled
+    if AUTO_START_SERVER:
+        server_process = start_bridge_server()
+        if server_process is None:
+            print("\n[!] Failed to auto-start bridge server.")
+            print("Set AUTO_START_SERVER = False and run manually:")
+            print("  python -m MetaTrader5")
+            print("\nContinuing anyway...")
+
     # Test connection
     if not test_connection():
         print("\n✗ Tests aborted - no connection")
-        return
+        if server_process:
+            print("\nStopping bridge server...")
+            server_process.terminate()
+            server_process.wait()
+        sys.exit(1)
 
     try:
         # Run tests
@@ -308,6 +372,18 @@ def main():
         print("✓ Disconnected")
         print("=" * 50)
 
+        # Stop bridge server if we started it
+        if server_process:
+            print("\nStopping bridge server...")
+            server_process.terminate()
+            try:
+                server_process.wait(timeout=2)
+                print("✓ Server stopped")
+            except subprocess.TimeoutExpired:
+                server_process.kill()
+                print("✓ Server killed")
+
 
 if __name__ == "__main__":
     main()
+</content>

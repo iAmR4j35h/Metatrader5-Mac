@@ -3,63 +3,116 @@
 Basic example of using MetaTrader5 on macOS.
 
 This example demonstrates how to:
-1. Start the bridge server (optional - can run separately)
+1. Start the bridge server (automatically or separately)
 2. Connect to MT5 running in Wine/CrossOver or VM
 3. Get account information
 4. Retrieve symbol data
 5. Place a trade (commented out for safety)
 
-Prerequisites:
-- MT5 running with MT5Bridge EA attached
-- Bridge server running (see below)
+Quick Start:
+    python basic_usage.py
 
-Running the Bridge Server:
-    Option 1: Run separately
-        $ python -m MetaTrader5
-
-    Option 2: Start programmatically (see commented code below)
-        server = mt5.start_bridge_server()
-
-    Option 3: Console script (after pip install)
-        $ mt5-bridge-server
-
-Environment variables (optional):
-    export MT5_HOST=127.0.0.1  # Bridge server host
-    export MT5_PORT=8222       # Bridge server port
+The script will automatically start the bridge server, or you can run it
+separately with: python -m MetaTrader5
 """
 
 import MetaTrader5 as mt5
 from datetime import datetime
 import time
+import subprocess
+import sys
+import os
+
+# ============================================================
+# CONFIGURATION
+# ============================================================
+# Set to True to automatically start bridge server in this script
+# Set to False if you prefer to run server separately:
+#   python -m MetaTrader5
+AUTO_START_SERVER = True
+
+BRIDGE_HOST = '127.0.0.1'
+BRIDGE_PORT = 8222
+SERVER_STARTUP_DELAY = 3  # Seconds to wait for server to start
+# ============================================================
+
+
+def start_bridge_server():
+    """Start bridge server as a subprocess."""
+    print("Starting bridge server...")
+    print(f"  Host: {BRIDGE_HOST}")
+    print(f"  Port: {BRIDGE_PORT}")
+    print()
+
+    # Start server as background process
+    try:
+        process = subprocess.Popen(
+            [sys.executable, '-m', 'MetaTrader5'],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+
+        # Wait for server to start
+        print(f"Waiting {SERVER_STARTUP_DELAY}s for server startup...")
+        time.sleep(SERVER_STARTUP_DELAY)
+
+        # Check if process is still running
+        if process.poll() is not None:
+            stdout, stderr = process.communicate()
+            print("✗ Server failed to start!")
+            print(f"Output: {stdout}")
+            print(f"Errors: {stderr}")
+            return None
+
+        print("✓ Bridge server started")
+        return process
+
+    except Exception as e:
+        print(f"✗ Failed to start server: {e}")
+        return None
 
 
 def main():
     print("MetaTrader5 macOS Example")
     print("=" * 50)
 
-    # Optional: Start bridge server programmatically
-    # Uncomment the following lines if you want to start the server from this script
-    # Note: You can also run 'python -m MetaTrader5' in a separate terminal
-    #
-    # print("\n[Optional] Starting bridge server...")
-    # server = mt5.start_bridge_server()
-    # time.sleep(2)  # Wait for server to start and MT5 to connect
-    #
-    # Or check if server is already running - if not, you need to start it
-    # separately with: python -m MetaTrader5
+    server_process = None
+
+    # Start bridge server if auto-start is enabled
+    if AUTO_START_SERVER:
+        print("\n[Auto-start] Starting bridge server...")
+        server_process = start_bridge_server()
+
+        if server_process is None:
+            print("\nFailed to auto-start server. You can:")
+            print("  1. Set AUTO_START_SERVER = False and run server separately:")
+            print("     python -m MetaTrader5")
+            print("  2. Or fix the error above")
+            return
+    else:
+        print("\n[Manual] Make sure bridge server is running:")
+        print("  python -m MetaTrader5")
+        print()
 
     # Initialize connection
     print("\n1. Connecting to MT5...")
-    print("   (Make sure bridge server is running: python -m MetaTrader5)")
     if not mt5.initialize():
         print("Failed to connect to MT5!")
         print(f"Error code: {mt5.last_error()}")
         print("\nMake sure:")
-        print("  1. Bridge server is running:")
-        print("     python -m MetaTrader5")
+        print("  1. Bridge server is running")
+        if not AUTO_START_SERVER:
+            print("     python -m MetaTrader5")
         print("  2. MT5 is running (in Wine/VM)")
         print("  3. MT5Bridge EA is attached to a chart in MT5")
         print("  4. EA shows 'Connected to Python server'")
+
+        # Cleanup server if we started it
+        if server_process:
+            print("\nStopping bridge server...")
+            server_process.terminate()
+            server_process.wait()
         return
 
     print("Connected successfully!")
@@ -153,11 +206,16 @@ def main():
     mt5.shutdown()
     print("Disconnected successfully!")
 
-    # Optional: Stop bridge server if started programmatically
-    # if 'server' in locals():
-    #     print("Stopping bridge server...")
-    #     server.stop()
-    #     print("Server stopped!")
+    # Stop bridge server if we started it
+    if server_process:
+        print("\nStopping bridge server...")
+        server_process.terminate()
+        try:
+            server_process.wait(timeout=2)
+            print("✓ Server stopped")
+        except subprocess.TimeoutExpired:
+            server_process.kill()
+            print("✓ Server killed")
 
     print("\n" + "=" * 50)
     print("Example completed!")
