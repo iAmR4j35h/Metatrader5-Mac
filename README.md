@@ -45,7 +45,7 @@ I want to set up MetaTrader5 on my Mac using this repository: https://github.com
 Please help me:
 1. Clone the repository and install the Python package
 2. Set up the MT5 Bridge EA in my MetaTrader 5 (running in Wine/CrossOver/VM)
-3. Copy MQL5/Experts/MT5Bridge/MT5Bridge.mq5 to the correct MT5 Data Folder
+3. Copy MQL5/Experts/MT5Bridge/MT5BridgeClient.mq5 to the correct MT5 Data Folder
 4. Compile the EA in MetaEditor
 5. Attach the EA to a chart in MT5
 6. Run examples/basic_usage.py to verify the connection works
@@ -123,7 +123,7 @@ pip install git+https://github.com/iAmR4j35h/Metatrader5-Mac.git
 ### Step 2: Install MT5 Bridge EA
 
 1. Open MetaTrader 5 (in Wine/VM)
-2. Copy `MQL5/Experts/MT5Bridge/MT5Bridge.mq5` to your MT5 Data Folder:
+2. Copy `MQL5/Experts/MT5Bridge/MT5BridgeClient.mq5` to your MT5 Data Folder:
    - In MT5: **File → Open Data Folder → MQL5 → Experts**
 3. Compile the EA in MetaEditor (F7)
 4. Attach the EA to any chart
@@ -320,7 +320,7 @@ Metatrader5-Mac/
 │   ├── _bridge_server.py       # Bridge server (internal)
 │   └── __main__.py             # `python -m MetaTrader5`
 ├── MQL5/Experts/MT5Bridge/      # MT5 Expert Advisors
-│   └── MT5Bridge.mq5            # Bridge EA (compile in MT5)
+│   └── MT5BridgeClient.mq5            # Bridge EA (compile in MT5)
 ├── examples/                     # Ready-to-use examples
 │   ├── basic_usage.py
 │   ├── login_and_show_balance.py
