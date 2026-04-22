@@ -37,6 +37,7 @@ class MT5BridgeServer:
         self.script_sockets = []  # Connections from Python scripts
         self.running = False
         self.lock = threading.Lock()
+        self._mt5_response_buffer = ""  # Buffer for MT5 responses
 
     def start(self):
         """Start the bridge server."""
@@ -207,16 +208,6 @@ class MT5BridgeServer:
             except:
                 pass
             print(f"\n[-] Python script disconnected")
-
-    def __init__(self, host=HOST, port=PORT):
-        self.host = host
-        self.port = port
-        self.server_socket = None
-        self.mt5_socket = None  # Connection from MT5 EA
-        self.script_sockets = []  # Connections from Python scripts
-        self.running = False
-        self.lock = threading.Lock()
-        self._mt5_response_buffer = ""  # Buffer for MT5 responses
 
     def forward_to_mt5(self, message: str) -> str:
         """Forward a message to MT5 and return the response."""
