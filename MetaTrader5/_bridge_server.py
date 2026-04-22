@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 MetaTrader 5 Bridge Server
 
@@ -8,7 +7,12 @@ This server acts as a bridge between Python scripts and MT5.
 - Server forwards requests between them
 
 Usage:
-    python -m MetaTrader5.bridge_server
+    # Run as standalone script
+    python MetaTrader5/_bridge_server.py
+
+    # Or start programmatically
+    import MetaTrader5 as mt5
+    server = mt5.start_bridge_server()
 """
 
 import socket

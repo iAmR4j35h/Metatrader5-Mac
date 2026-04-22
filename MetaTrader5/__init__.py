@@ -429,3 +429,46 @@ def Sell(symbol, volume, price=None, *, comment=None, ticket=None):
         if r.retcode != TRADE_RETCODE_REQUOTE and r.retcode != TRADE_RETCODE_PRICE_OFF:
             break
     return r
+
+
+# Bridge server functionality
+def start_bridge_server(host='127.0.0.1', port=8222):
+    """
+    Start the MetaTrader 5 bridge server.
+
+    This server acts as a bridge between Python scripts and MT5 running
+    in Wine/CrossOver or a VM. MT5 connects to this server via the
+    MT5BridgeClient EA.
+
+    Args:
+        host: Host IP to listen on (default: 127.0.0.1)
+        port: Port to listen on (default: 8222)
+
+    Returns:
+        MT5BridgeServer instance that can be stopped with .stop()
+
+    Example:
+        # Start server programmatically
+        server = mt5.start_bridge_server()
+
+        # Use MT5 functions...
+        mt5.initialize()
+        print(mt5.account_info())
+
+        # Stop server when done
+        server.stop()
+    """
+    from ._bridge_server import MT5BridgeServer
+    server = MT5BridgeServer(host=host, port=port)
+
+    import threading
+    server_thread = threading.Thread(target=server.start, daemon=True)
+    server_thread.start()
+
+    import time
+    time.sleep(1)  # Give server time to start
+
+    print(f"MT5 Bridge Server started on {host}:{port}")
+    print("Waiting for MT5 to connect...")
+
+    return server
