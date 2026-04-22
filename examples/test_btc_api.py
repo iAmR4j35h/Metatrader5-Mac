@@ -31,8 +31,28 @@ SERVER_STARTUP_DELAY = 3
 # ============================================================
 
 
+def is_server_running(host='127.0.0.1', port=8222):
+    """Check if bridge server is already running."""
+    import socket
+    try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(2)
+        result = sock.connect_ex((host, port))
+        sock.close()
+        return result == 0
+    except:
+        return False
+
+
 def start_bridge_server():
     """Start bridge server as a subprocess."""
+    # Check if server is already running
+    if is_server_running(BRIDGE_HOST, BRIDGE_PORT):
+        print("✓ Bridge server already running")
+        print(f"  Host: {BRIDGE_HOST}")
+        print(f"  Port: {BRIDGE_PORT}")
+        return None  # Indicate server was already running
+
     print("[Auto] Starting bridge server...")
     print(f"  Host: {BRIDGE_HOST}")
     print(f"  Port: {BRIDGE_PORT}")
@@ -292,7 +312,7 @@ def main():
     # Auto-start bridge server if enabled
     if AUTO_START_SERVER:
         server_process = start_bridge_server()
-        if server_process is None:
+        if server_process is None and not is_server_running(BRIDGE_HOST, BRIDGE_PORT):
             print("\n[!] Failed to auto-start bridge server.")
             print("Set AUTO_START_SERVER = False and run manually:")
             print("  python -m MetaTrader5")
@@ -382,6 +402,8 @@ def main():
             except subprocess.TimeoutExpired:
                 server_process.kill()
                 print("✓ Server killed")
+        elif is_server_running(BRIDGE_HOST, BRIDGE_PORT):
+            print("\n(Bridge server was already running - not stopping it)")
 
 
 if __name__ == "__main__":

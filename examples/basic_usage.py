@@ -37,8 +37,28 @@ SERVER_STARTUP_DELAY = 3  # Seconds to wait for server to start
 # ============================================================
 
 
+def is_server_running(host='127.0.0.1', port=8222):
+    """Check if bridge server is already running."""
+    import socket
+    try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(2)
+        result = sock.connect_ex((host, port))
+        sock.close()
+        return result == 0
+    except:
+        return False
+
+
 def start_bridge_server():
     """Start bridge server as a subprocess."""
+    # Check if server is already running
+    if is_server_running(BRIDGE_HOST, BRIDGE_PORT):
+        print("✓ Bridge server already running")
+        print(f"  Host: {BRIDGE_HOST}")
+        print(f"  Port: {BRIDGE_PORT}")
+        return None  # Indicate server was already running
+
     print("Starting bridge server...")
     print(f"  Host: {BRIDGE_HOST}")
     print(f"  Port: {BRIDGE_PORT}")
@@ -207,6 +227,7 @@ def main():
     print("Disconnected successfully!")
 
     # Stop bridge server if we started it
+    # (Don't stop if it was already running before we started)
     if server_process:
         print("\nStopping bridge server...")
         server_process.terminate()
@@ -216,6 +237,8 @@ def main():
         except subprocess.TimeoutExpired:
             server_process.kill()
             print("✓ Server killed")
+    elif is_server_running():
+        print("\n(Bridge server was already running - not stopping it)")
 
     print("\n" + "=" * 50)
     print("Example completed!")
