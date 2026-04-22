@@ -344,14 +344,16 @@ Unofficial implementation. MetaQuotes Software Corp. is not affiliated with this
 
 If this project helped you trade on macOS, consider supporting its development:
 
-### Quick Donate
-- **GitHub Sponsors**: [github.com/sponsors/iAmR4j35h](https://github.com/sponsors/iAmR4j35h) ⭐ (Zero fees!)
-- **Buy Me a Coffee**: [buymeacoffee.com/iamr4j35h](https://buymeacoffee.com/iamr4j35h) ☕
-- **PayPal**: [paypal.me/iamr4j35h](https://paypal.me/iamr4j35h)
+### GitHub Sponsors ⭐ (Zero fees!)
+- [github.com/sponsors/iAmR4j35h](https://github.com/sponsors/iAmR4j35h)
 
-### Crypto
-- **BTC**: `bc1q...your_address...` (add your wallet)
-- **ETH/USDT**: `0x...your_address...` (add your wallet)
+### Cryptocurrency
+| Chain | Address |
+|-------|---------|
+| **Bitcoin (BTC)** | `bc1qjav8denrl0yvqu20pxjeekwzuwx7j2trmjm5kh` |
+| **Ethereum (ETH)** | `0x1F297d9174CdFd146992C30D3f31138eA430bf76` |
+| **BNB Chain (BSC)** | `0x1F297d9174CdFd146992C30D3f31138eA430bf76` |
+| **Tron (TRX/USDT)** | `TE7CaBstE66Ma3ZWpqHwpTh3Y152H1Xnpf` |
 
 ### What Your Support Covers
 - 🐛 Bug fixes and maintenance
